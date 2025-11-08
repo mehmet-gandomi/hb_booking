@@ -36,6 +36,51 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
+    min-height: 600px;
+}
+
+/* FullCalendar customizations */
+#hb-booking-calendar .fc {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+#hb-booking-calendar .fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 13px;
+}
+
+#hb-booking-calendar .fc-event:hover {
+    opacity: 0.85;
+}
+
+#hb-booking-calendar .fc-toolbar-title {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+#hb-booking-calendar .fc-button {
+    background-color: #2271b1;
+    border-color: #2271b1;
+    text-transform: capitalize;
+}
+
+#hb-booking-calendar .fc-button:hover {
+    background-color: #135e96;
+    border-color: #135e96;
+}
+
+#hb-booking-calendar .fc-button:disabled {
+    opacity: 0.5;
+}
+
+#hb-booking-calendar .fc-button-active {
+    background-color: #135e96;
+}
+
+#hb-booking-calendar .fc-daygrid-day.fc-day-today {
+    background-color: #f0f6fc;
 }
 
 /* Table Enhancements */

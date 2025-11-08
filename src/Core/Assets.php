@@ -67,17 +67,33 @@ class Assets
             return;
         }
 
+        // FullCalendar library for calendar view
+        wp_enqueue_style(
+            'fullcalendar',
+            'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css',
+            [],
+            '6.1.10'
+        );
+
+        wp_enqueue_script(
+            'fullcalendar',
+            'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js',
+            [],
+            '6.1.10',
+            true
+        );
+
         wp_enqueue_style(
             'hb-booking-admin',
             HB_BOOKING_PLUGIN_URL . 'assets/css/admin.css',
-            [],
+            ['fullcalendar'],
             HB_BOOKING_VERSION
         );
 
         wp_enqueue_script(
             'hb-booking-admin',
             HB_BOOKING_PLUGIN_URL . 'assets/js/admin.js',
-            ['jquery', 'jquery-ui-datepicker'],
+            ['jquery', 'jquery-ui-datepicker', 'fullcalendar'],
             HB_BOOKING_VERSION,
             true
         );
