@@ -15,6 +15,9 @@ wp-includes/
 .DS_Store
 Thumbs.db
 
+# Claude Code
+.claude/settings.local.json
+
 # Node (if using build tools later)
 node_modules/
 package-lock.json
