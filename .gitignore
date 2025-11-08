@@ -1,0 +1,45 @@
+# Composer
+/vendor/
+composer.lock
+
+# WordPress
+wp-content/
+wp-admin/
+wp-includes/
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Node (if using build tools later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build artifacts
+/dist/
+/build/
+
+# Logs
+*.log
+npm-debug.log*
+error_log
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~

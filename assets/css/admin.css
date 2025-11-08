@@ -1,0 +1,68 @@
+/**
+ * Admin styles for HB Booking Plugin
+ */
+
+/* Status Badges */
+.hb-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+}
+
+.hb-status-badge.hb-status-pending {
+    background: #f39c12;
+}
+
+.hb-status-badge.hb-status-confirmed {
+    background: #27ae60;
+}
+
+.hb-status-badge.hb-status-cancelled {
+    background: #e74c3c;
+}
+
+.hb-status-badge.hb-status-completed {
+    background: #95a5a6;
+}
+
+/* Booking Calendar */
+#hb-booking-calendar {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* Table Enhancements */
+.wp-list-table .hb-edit-booking,
+.wp-list-table .hb-delete-booking {
+    margin-right: 5px;
+}
+
+.wp-list-table .hb-delete-booking {
+    color: #e74c3c;
+}
+
+.wp-list-table .hb-delete-booking:hover {
+    color: #c0392b;
+}
+
+/* Settings Page */
+.hb-settings-section {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.hb-settings-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}

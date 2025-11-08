@@ -1,0 +1,302 @@
+/**
+ * Frontend styles for HB Booking Plugin
+ * Modern, responsive design following best practices
+ */
+
+/* Form Wrapper */
+.hb-booking-form-wrapper {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hb-booking-title {
+    margin: 0 0 1.5rem;
+    font-size: 2rem;
+    color: #333;
+    text-align: center;
+}
+
+/* Form Structure */
+.hb-booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.hb-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.hb-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.hb-form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.hb-form-group label .required {
+    color: #e74c3c;
+    margin-left: 2px;
+}
+
+/* Form Controls */
+.hb-form-control {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.hb-form-control:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.hb-form-control:invalid:not(:focus):not(:placeholder-shown) {
+    border-color: #e74c3c;
+}
+
+textarea.hb-form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Form Actions */
+.hb-form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.hb-btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.hb-btn-primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.hb-btn-primary:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.hb-btn-primary:active {
+    transform: translateY(0);
+}
+
+.hb-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Form Messages */
+.hb-form-messages {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 4px;
+    display: none;
+}
+
+.hb-form-messages.show {
+    display: block;
+}
+
+.hb-form-messages.success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.hb-form-messages.error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+/* Customer Calendar */
+.hb-customer-calendar-wrapper {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.hb-bookings-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.hb-booking-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #4CAF50;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hb-booking-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.hb-booking-item.hb-booking-status-pending {
+    border-left-color: #f39c12;
+}
+
+.hb-booking-item.hb-booking-status-confirmed {
+    border-left-color: #27ae60;
+}
+
+.hb-booking-item.hb-booking-status-cancelled {
+    border-left-color: #e74c3c;
+}
+
+.hb-booking-item.hb-booking-status-completed {
+    border-left-color: #95a5a6;
+}
+
+.hb-booking-date {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.hb-booking-date .hb-date {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.hb-booking-date .hb-time {
+    display: block;
+    font-size: 1rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.hb-booking-details p {
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.hb-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+}
+
+.hb-status-badge.hb-status-pending {
+    background: #f39c12;
+}
+
+.hb-status-badge.hb-status-confirmed {
+    background: #27ae60;
+}
+
+.hb-status-badge.hb-status-cancelled {
+    background: #e74c3c;
+}
+
+.hb-status-badge.hb-status-completed {
+    background: #95a5a6;
+}
+
+.hb-no-bookings {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Loading State */
+.hb-booking-form.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.hb-booking-form.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #4CAF50;
+    border-radius: 50%;
+    animation: hb-spin 1s linear infinite;
+}
+
+@keyframes hb-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hb-booking-form-wrapper {
+        padding: 1.5rem;
+    }
+
+    .hb-form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .hb-booking-title {
+        font-size: 1.5rem;
+    }
+
+    .hb-bookings-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Accessibility */
+.hb-form-control:focus-visible {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
