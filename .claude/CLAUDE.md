@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **⚠️ IMPORTANT**: Before adding any new code, features, or making changes to this project, **READ THIS FILE FIRST** to understand where code should be placed and what patterns to follow.
+
 ## Project Overview
 
 HB Booking is a WordPress plugin for appointment booking with calendar integration. It follows modern PHP practices (PHP 8.0+) with PSR-4 autoloading, SOLID principles, and WordPress coding standards.
@@ -18,6 +20,41 @@ vendor/bin/phpstan analyse src
 ```
 
 After installation, activate the plugin in WordPress admin and configure at **Bookings > Settings**.
+
+## File Organization & Where to Add Code
+
+### JavaScript Files
+- **`assets/js/frontend.js`** - Frontend booking form logic, customer-facing interactions
+- **`assets/js/admin.js`** - Admin panel JavaScript (BookingManager, CalendarManager, SettingsManager classes)
+  - Use class-based architecture with `constructor()` and methods
+  - NEVER add inline `<script>` tags in PHP files - always use this file
+  - Example: Settings toggles, admin form handlers, calendar initialization
+
+### CSS Files
+- **`assets/css/frontend.css`** - Styles for booking form and customer calendar
+- **`assets/css/admin.css`** - Admin panel styles (table layouts, status badges, etc.)
+
+### PHP Structure
+- **`src/Core/`** - Database access, installer, asset loading
+  - Add new core functionality here (e.g., cache layer, logging)
+- **`src/Admin/`** - Admin interface and settings
+  - `BookingAdmin.php` - Add new admin pages, settings fields, menu items
+  - OAuth flows and admin-only actions go here
+- **`src/Frontend/`** - Public-facing shortcodes
+  - Add new shortcodes or customer-facing features
+- **`src/Api/`** - REST API endpoints
+  - Extend `BookingApi.php` for new CRUD operations
+- **`src/Services/`** - Business logic services
+  - `EmailService.php` - Email templates and sending logic
+  - `CalendarService.php` - Calendar integration (Google, iCal)
+  - Add new services here (e.g., PaymentService, NotificationService)
+
+### Key Rules
+1. **JavaScript**: Always add to `assets/js/admin.js` or `assets/js/frontend.js`, NEVER inline in PHP
+2. **CSS**: Always add to respective CSS files, avoid inline styles except for dynamic values
+3. **Settings**: Register in `BookingAdmin::registerSettings()`, render in `BookingAdmin::renderSettingsPage()`
+4. **Database**: All queries go through `Database` class methods, never direct SQL
+5. **Assets**: Enqueue via `Assets::enqueue()` method, localize data with `wp_localize_script()`
 
 ## Architecture
 
@@ -121,13 +158,6 @@ add_filter('hb_booking_end_hour', fn() => 17);    // Default: 17
 add_filter('hb_booking_interval', fn() => 30);    // Minutes, default: 30
 ```
 
-**Google Calendar Integration:**
-```php
-add_filter('hb_booking_google_calendar_event_id', function($event_id, $booking) {
-    // Implement Google Calendar API and return event ID
-    return $your_event_id;
-}, 10, 2);
-```
 
 ## Security
 
@@ -160,9 +190,15 @@ All use HTML format via `wp_mail()` with inline styles.
 
 ## Calendar Integration
 
-**iCal:** Generated automatically, saved to `wp-content/uploads/hb-booking-icals/booking-{id}.ics`
+**iCal:** Generated automatically, saved to `wp-content/uploads/hb-booking-icals/booking-{id}.ics`. Enabled by selecting "iCal" in Settings.
 
-**Google Calendar:** Currently placeholder with filter hooks for custom implementation. Requires OAuth2 setup and Google Calendar API client.
+**Google Calendar:** Full OAuth2 integration built-in. Configure via **Bookings > Settings**:
+- Requires Google Cloud Console OAuth2 credentials (Client ID, Client Secret)
+- Supports "primary" or specific calendar IDs
+- Stores refresh token in WordPress options
+- Automatically creates, updates, and deletes calendar events
+- Uses `CalendarService::getAccessToken()` to refresh access tokens via OAuth2
+- Events include customer details, attendees, and reminders
 
 ## WordPress Requirements
 

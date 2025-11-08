@@ -174,29 +174,42 @@ add_filter('hb_booking_end_hour', function() { return 18; });
 add_filter('hb_booking_interval', function() { return 60; }); // minutes
 ```
 
-**Custom Google Calendar integration:**
-```php
-add_filter('hb_booking_google_calendar_event_id', function($event_id, $booking) {
-    // Your custom Google Calendar API implementation
-    return $your_event_id;
-}, 10, 2);
-```
-
 ## Calendar Integration
 
 ### iCal Format
 
-Automatically generates `.ics` files for each booking that can be imported into any calendar application.
+Automatically generates `.ics` files for each booking that can be imported into any calendar application. To enable:
+
+1. Go to **Bookings > Settings**
+2. Select "iCal" from the Calendar Integration dropdown
+3. Save settings
 
 ### Google Calendar
 
-To enable Google Calendar integration:
+Built-in Google Calendar integration with OAuth2 authentication. To set up:
 
-1. Set up Google Calendar API credentials
-2. Implement OAuth2 authentication
-3. Use the provided filter hooks to add your implementation
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create a new project or select an existing one
+3. Enable the Google Calendar API
+4. Create OAuth 2.0 credentials (Web application type)
+5. Add your WordPress site URL to authorized redirect URIs: `https://yoursite.com/wp-admin/admin.php`
+6. Copy the Client ID and Client Secret
+7. In WordPress, go to **Bookings > Settings**
+8. Select "Google Calendar" from Calendar Integration dropdown
+9. Paste your Client ID and Client Secret
+10. Set your Calendar ID (use "primary" for your main calendar)
+11. Save settings and click "Authorize with Google"
+12. Complete the OAuth authorization flow
 
-See `src/Services/CalendarService.php` for implementation details.
+Once connected, all new bookings will automatically be added to your Google Calendar with:
+- Event title with service name
+- Customer details in description
+- Customer and admin as attendees
+- Email and popup reminders
+
+The integration also supports:
+- Updating events when bookings are modified
+- Removing events when bookings are cancelled or deleted
 
 ## Email Notifications
 

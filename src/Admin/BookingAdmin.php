@@ -19,6 +19,7 @@ class BookingAdmin
 
         add_action('admin_menu', [$this, 'addAdminMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
+        add_action('admin_init', [$this, 'handleGoogleAuth']);
     }
 
     public static function getInstance(): BookingAdmin
@@ -71,6 +72,15 @@ class BookingAdmin
             'hb-booking-settings',
             [$this, 'renderSettingsPage']
         );
+
+        add_submenu_page(
+            'hb-booking',
+            __('Debug Logs', 'hb-booking'),
+            __('Debug Logs', 'hb-booking'),
+            'manage_options',
+            'hb-booking-debug',
+            [$this, 'renderDebugPage']
+        );
     }
 
     /**
@@ -83,6 +93,10 @@ class BookingAdmin
         register_setting('hb_booking_settings', 'hb_booking_date_format');
         register_setting('hb_booking_settings', 'hb_booking_enable_notifications');
         register_setting('hb_booking_settings', 'hb_booking_calendar_integration');
+        register_setting('hb_booking_settings', 'hb_booking_google_client_id');
+        register_setting('hb_booking_settings', 'hb_booking_google_client_secret');
+        register_setting('hb_booking_settings', 'hb_booking_google_calendar_id');
+        register_setting('hb_booking_settings', 'hb_booking_google_refresh_token');
     }
 
     /**
@@ -291,7 +305,124 @@ class BookingAdmin
                             </p>
                         </td>
                     </tr>
+                </table>
 
+                <h2 class="title" id="google-calendar-settings" style="<?php echo get_option('hb_booking_calendar_integration') === 'google' ? '' : 'display:none;'; ?>">
+                    <?php esc_html_e('Google Calendar Settings', 'hb-booking'); ?>
+                </h2>
+                <p class="description" style="<?php echo get_option('hb_booking_calendar_integration') === 'google' ? '' : 'display:none;'; ?>">
+                    <?php echo wp_kses_post(
+                        sprintf(
+                            __('To set up Google Calendar integration: <br>1. Go to <a href="%s" target="_blank">Google Cloud Console</a><br>2. Create a new project or select an existing one<br>3. Enable the Google Calendar API<br>4. Create OAuth 2.0 credentials (Web application)<br>5. Add your WordPress site URL to authorized redirect URIs<br>6. Copy the Client ID and Client Secret below', 'hb-booking'),
+                            'https://console.cloud.google.com/apis/credentials'
+                        )
+                    ); ?>
+                </p>
+                <table class="form-table google-calendar-settings" style="<?php echo get_option('hb_booking_calendar_integration') === 'google' ? '' : 'display:none;'; ?>">
+                    <tr>
+                        <th scope="row">
+                            <label for="hb_booking_google_client_id">
+                                <?php esc_html_e('Google Client ID', 'hb-booking'); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <input
+                                type="text"
+                                id="hb_booking_google_client_id"
+                                name="hb_booking_google_client_id"
+                                value="<?php echo esc_attr(get_option('hb_booking_google_client_id', '')); ?>"
+                                class="large-text"
+                            />
+                            <p class="description">
+                                <?php esc_html_e('OAuth 2.0 Client ID from Google Cloud Console', 'hb-booking'); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="hb_booking_google_client_secret">
+                                <?php esc_html_e('Google Client Secret', 'hb-booking'); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <input
+                                type="password"
+                                id="hb_booking_google_client_secret"
+                                name="hb_booking_google_client_secret"
+                                value="<?php echo esc_attr(get_option('hb_booking_google_client_secret', '')); ?>"
+                                class="large-text"
+                            />
+                            <p class="description">
+                                <?php esc_html_e('OAuth 2.0 Client Secret from Google Cloud Console', 'hb-booking'); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="hb_booking_google_calendar_id">
+                                <?php esc_html_e('Google Calendar ID', 'hb-booking'); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <input
+                                type="text"
+                                id="hb_booking_google_calendar_id"
+                                name="hb_booking_google_calendar_id"
+                                value="<?php echo esc_attr(get_option('hb_booking_google_calendar_id', 'primary')); ?>"
+                                class="regular-text"
+                            />
+                            <p class="description">
+                                <?php esc_html_e('Calendar ID (use "primary" for your main calendar, or find it in Google Calendar settings)', 'hb-booking'); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <?php esc_html_e('Authorization Status', 'hb-booking'); ?>
+                        </th>
+                        <td>
+                            <?php if (get_option('hb_booking_google_refresh_token')): ?>
+                                <span style="color: green;">
+                                    <span class="dashicons dashicons-yes"></span>
+                                    <?php esc_html_e('Connected', 'hb-booking'); ?>
+                                </span>
+                                <p class="description">
+                                    <?php esc_html_e('Your Google Calendar is connected and ready to use.', 'hb-booking'); ?>
+                                </p>
+                            <?php else: ?>
+                                <span style="color: orange;">
+                                    <span class="dashicons dashicons-warning"></span>
+                                    <?php esc_html_e('Not connected', 'hb-booking'); ?>
+                                </span>
+                                <p class="description">
+                                    <?php esc_html_e('Please save your Client ID and Client Secret, then click "Authorize with Google" below.', 'hb-booking'); ?>
+                                </p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+
+                    <?php if (get_option('hb_booking_google_client_id') && get_option('hb_booking_google_client_secret')): ?>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>
+                            <?php if (!get_option('hb_booking_google_refresh_token')): ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=hb-booking-settings&action=google-auth')); ?>" class="button button-primary">
+                                    <?php esc_html_e('Authorize with Google', 'hb-booking'); ?>
+                                </a>
+                            <?php else: ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=hb-booking-settings&action=google-disconnect')); ?>" class="button button-secondary">
+                                    <?php esc_html_e('Disconnect Google Calendar', 'hb-booking'); ?>
+                                </a>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+                </table>
+
+                <table class="form-table">
                     <tr>
                         <th scope="row">
                             <?php esc_html_e('Shortcodes', 'hb-booking'); ?>
@@ -322,5 +453,167 @@ class BookingAdmin
         ];
 
         return $colors[$status] ?? '#3498db';
+    }
+
+    /**
+     * Render debug logs page
+     */
+    public function renderDebugPage(): void
+    {
+        // Get WordPress debug log
+        $log_file = WP_CONTENT_DIR . '/debug.log';
+        $logs = [];
+
+        if (file_exists($log_file)) {
+            $log_content = file_get_contents($log_file);
+            $lines = explode("\n", $log_content);
+
+            // Get only HB Booking related logs (last 100)
+            $logs = array_filter($lines, function($line) {
+                return strpos($line, 'HB Booking:') !== false;
+            });
+            $logs = array_slice(array_reverse($logs), 0, 100);
+        }
+
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Debug Logs', 'hb-booking'); ?></h1>
+
+            <div class="notice notice-info">
+                <p>
+                    <strong><?php esc_html_e('Google Calendar Integration Status:', 'hb-booking'); ?></strong><br>
+                    <?php esc_html_e('Calendar Integration:', 'hb-booking'); ?>
+                    <strong><?php echo esc_html(get_option('hb_booking_calendar_integration', 'none')); ?></strong><br>
+
+                    <?php esc_html_e('Google Client ID:', 'hb-booking'); ?>
+                    <?php echo get_option('hb_booking_google_client_id') ? '<span style="color:green;">✓ Set</span>' : '<span style="color:red;">✗ Not set</span>'; ?><br>
+
+                    <?php esc_html_e('Google Client Secret:', 'hb-booking'); ?>
+                    <?php echo get_option('hb_booking_google_client_secret') ? '<span style="color:green;">✓ Set</span>' : '<span style="color:red;">✗ Not set</span>'; ?><br>
+
+                    <?php esc_html_e('Google Refresh Token:', 'hb-booking'); ?>
+                    <?php echo get_option('hb_booking_google_refresh_token') ? '<span style="color:green;">✓ Connected</span>' : '<span style="color:red;">✗ Not connected</span>'; ?><br>
+
+                    <?php esc_html_e('Calendar ID:', 'hb-booking'); ?>
+                    <strong><?php echo esc_html(get_option('hb_booking_google_calendar_id', 'primary')); ?></strong>
+                </p>
+                <p>
+                    <em><?php esc_html_e('This page displays WordPress debug logs. Enable WP_DEBUG_LOG in wp-config.php to see detailed logging for troubleshooting.', 'hb-booking'); ?></em>
+                </p>
+            </div>
+
+            <h2><?php esc_html_e('Recent Logs (Most Recent First)', 'hb-booking'); ?></h2>
+
+            <?php if (empty($logs)): ?>
+                <div class="notice notice-warning">
+                    <p><?php esc_html_e('No logs found. Make sure WP_DEBUG and WP_DEBUG_LOG are enabled in wp-config.php', 'hb-booking'); ?></p>
+                    <p>
+                        <code>define('WP_DEBUG', true);</code><br>
+                        <code>define('WP_DEBUG_LOG', true);</code><br>
+                        <code>define('WP_DEBUG_DISPLAY', false);</code>
+                    </p>
+                </div>
+            <?php else: ?>
+                <div style="background: #f5f5f5; padding: 15px; border: 1px solid #ccc; max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap;">
+                    <?php foreach ($logs as $log): ?>
+                        <div style="padding: 5px 0; border-bottom: 1px solid #ddd;">
+                            <?php echo esc_html($log); ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <p style="margin-top: 20px;">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=hb-booking-debug')); ?>" class="button button-primary">
+                        <?php esc_html_e('Refresh Logs', 'hb-booking'); ?>
+                    </a>
+                </p>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Handle Google Calendar OAuth
+     */
+    public function handleGoogleAuth(): void
+    {
+        if (!isset($_GET['page']) || $_GET['page'] !== 'hb-booking-settings') {
+            return;
+        }
+
+        // Handle disconnect
+        if (isset($_GET['action']) && $_GET['action'] === 'google-disconnect') {
+            delete_option('hb_booking_google_refresh_token');
+            wp_redirect(admin_url('admin.php?page=hb-booking-settings&message=google-disconnected'));
+            exit;
+        }
+
+        // Handle OAuth callback
+        if (isset($_GET['code'])) {
+            $code = sanitize_text_field($_GET['code']);
+            $this->exchangeCodeForToken($code);
+            wp_redirect(admin_url('admin.php?page=hb-booking-settings&message=google-connected'));
+            exit;
+        }
+
+        // Handle OAuth initiation
+        if (isset($_GET['action']) && $_GET['action'] === 'google-auth') {
+            $this->initiateGoogleAuth();
+        }
+    }
+
+    /**
+     * Initiate Google OAuth flow
+     */
+    private function initiateGoogleAuth(): void
+    {
+        $client_id = get_option('hb_booking_google_client_id');
+        $redirect_uri = admin_url('admin.php?page=hb-booking-settings');
+
+        if (!$client_id) {
+            wp_die(__('Please configure your Google Client ID first.', 'hb-booking'));
+        }
+
+        $auth_url = add_query_arg([
+            'client_id' => $client_id,
+            'redirect_uri' => $redirect_uri,
+            'response_type' => 'code',
+            'scope' => 'https://www.googleapis.com/auth/calendar',
+            'access_type' => 'offline',
+            'prompt' => 'consent',
+        ], 'https://accounts.google.com/o/oauth2/v2/auth');
+
+        wp_redirect($auth_url);
+        exit;
+    }
+
+    /**
+     * Exchange authorization code for tokens
+     */
+    private function exchangeCodeForToken(string $code): void
+    {
+        $client_id = get_option('hb_booking_google_client_id');
+        $client_secret = get_option('hb_booking_google_client_secret');
+        $redirect_uri = admin_url('admin.php?page=hb-booking-settings');
+
+        $response = wp_remote_post('https://oauth2.googleapis.com/token', [
+            'body' => [
+                'code' => $code,
+                'client_id' => $client_id,
+                'client_secret' => $client_secret,
+                'redirect_uri' => $redirect_uri,
+                'grant_type' => 'authorization_code',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (isset($body['refresh_token'])) {
+            update_option('hb_booking_google_refresh_token', $body['refresh_token']);
+        }
     }
 }

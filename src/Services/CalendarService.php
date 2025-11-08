@@ -82,43 +82,66 @@ class CalendarService
 
     /**
      * Add to Google Calendar
-     * This is a placeholder - requires Google Calendar API setup
      */
     private function addToGoogleCalendar(object $booking): string|false
     {
-        // TODO: Implement Google Calendar API integration
-        // Requires OAuth2 authentication and Google Calendar API client
-        // For now, return a mock event ID
+        $access_token = $this->getAccessToken();
+        if (!$access_token) {
+            return false;
+        }
 
-        /**
-         * Implementation would include:
-         * 1. Authenticate with Google Calendar API using OAuth2
-         * 2. Create event with booking details
-         * 3. Add attendees (customer email, admin email)
-         * 4. Set reminders
-         * 5. Return event ID
-         *
-         * Example structure:
-         * $event = [
-         *     'summary' => "Booking: {$booking->service}",
-         *     'description' => $booking->notes,
-         *     'start' => [
-         *         'dateTime' => "{$booking->booking_date}T{$booking->booking_time}:00",
-         *         'timeZone' => wp_timezone_string(),
-         *     ],
-         *     'end' => [
-         *         'dateTime' => date('Y-m-d\TH:i:s', strtotime("$booking->booking_date $booking->booking_time +1 hour")),
-         *         'timeZone' => wp_timezone_string(),
-         *     ],
-         *     'attendees' => [
-         *         ['email' => $booking->customer_email],
-         *         ['email' => get_option('admin_email')],
-         *     ],
-         * ];
-         */
+        $calendar_id = get_option('hb_booking_google_calendar_id', 'primary');
+        $start_datetime = strtotime("{$booking->booking_date} {$booking->booking_time}");
+        $end_datetime = strtotime("+1 hour", $start_datetime);
 
-        // Apply filter to allow custom implementation
-        return apply_filters('hb_booking_google_calendar_event_id', false, $booking);
+        $event = [
+            'summary' => "Booking: " . ($booking->service ?: 'Appointment'),
+            'description' => $booking->notes ?: "Customer: {$booking->customer_name}\nPhone: {$booking->customer_phone}",
+            'start' => [
+                'dateTime' => date('c', $start_datetime),
+                'timeZone' => wp_timezone_string(),
+            ],
+            'end' => [
+                'dateTime' => date('c', $end_datetime),
+                'timeZone' => wp_timezone_string(),
+            ],
+            'attendees' => [
+                ['email' => $booking->customer_email, 'displayName' => $booking->customer_name],
+                ['email' => get_option('hb_booking_admin_email', get_option('admin_email'))],
+            ],
+            'reminders' => [
+                'useDefault' => false,
+                'overrides' => [
+                    ['method' => 'email', 'minutes' => 24 * 60],
+                    ['method' => 'popup', 'minutes' => 30],
+                ],
+            ],
+        ];
+
+        $response = wp_remote_post(
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events",
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $access_token,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode($event),
+                'timeout' => 30,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($response_code !== 200) {
+            return false;
+        }
+
+        return $body['id'] ?? false;
     }
 
     /**
@@ -126,8 +149,45 @@ class CalendarService
      */
     private function updateGoogleCalendarEvent(object $booking): bool
     {
-        // TODO: Implement Google Calendar API update
-        return apply_filters('hb_booking_google_calendar_update', false, $booking);
+        $access_token = $this->getAccessToken();
+        if (!$access_token || empty($booking->google_event_id)) {
+            return false;
+        }
+
+        $calendar_id = get_option('hb_booking_google_calendar_id', 'primary');
+        $start_datetime = strtotime("{$booking->booking_date} {$booking->booking_time}");
+        $end_datetime = strtotime("+1 hour", $start_datetime);
+
+        $event = [
+            'summary' => "Booking: " . ($booking->service ?: 'Appointment'),
+            'description' => $booking->notes ?: "Customer: {$booking->customer_name}\nPhone: {$booking->customer_phone}",
+            'start' => [
+                'dateTime' => date('c', $start_datetime),
+                'timeZone' => wp_timezone_string(),
+            ],
+            'end' => [
+                'dateTime' => date('c', $end_datetime),
+                'timeZone' => wp_timezone_string(),
+            ],
+            'attendees' => [
+                ['email' => $booking->customer_email, 'displayName' => $booking->customer_name],
+                ['email' => get_option('hb_booking_admin_email', get_option('admin_email'))],
+            ],
+        ];
+
+        $response = wp_remote_request(
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}",
+            [
+                'method' => 'PUT',
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $access_token,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode($event),
+            ]
+        );
+
+        return !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
     }
 
     /**
@@ -135,8 +195,55 @@ class CalendarService
      */
     private function removeFromGoogleCalendar(object $booking): bool
     {
-        // TODO: Implement Google Calendar API deletion
-        return apply_filters('hb_booking_google_calendar_delete', false, $booking);
+        $access_token = $this->getAccessToken();
+        if (!$access_token || empty($booking->google_event_id)) {
+            return false;
+        }
+
+        $calendar_id = get_option('hb_booking_google_calendar_id', 'primary');
+
+        $response = wp_remote_request(
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}",
+            [
+                'method' => 'DELETE',
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $access_token,
+                ],
+            ]
+        );
+
+        return !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 204;
+    }
+
+    /**
+     * Get access token using refresh token
+     */
+    private function getAccessToken(): string|false
+    {
+        $refresh_token = get_option('hb_booking_google_refresh_token');
+        if (!$refresh_token) {
+            return false;
+        }
+
+        $client_id = get_option('hb_booking_google_client_id');
+        $client_secret = get_option('hb_booking_google_client_secret');
+
+        $response = wp_remote_post('https://oauth2.googleapis.com/token', [
+            'body' => [
+                'client_id' => $client_id,
+                'client_secret' => $client_secret,
+                'refresh_token' => $refresh_token,
+                'grant_type' => 'refresh_token',
+            ],
+            'timeout' => 30,
+        ]);
+
+        if (is_wp_error($response)) {
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        return $body['access_token'] ?? false;
     }
 
     /**

@@ -135,11 +135,46 @@
     }
 
     /**
+     * Settings Manager
+     */
+    class SettingsManager {
+        constructor() {
+            this.init();
+        }
+
+        init() {
+            this.toggleGoogleCalendarSettings();
+            this.bindEvents();
+        }
+
+        bindEvents() {
+            $('#hb_booking_calendar_integration').on('change', () => {
+                this.toggleGoogleCalendarSettings();
+            });
+        }
+
+        toggleGoogleCalendarSettings() {
+            const calendarType = $('#hb_booking_calendar_integration').val();
+            const $googleSettings = $('#google-calendar-settings, .google-calendar-settings');
+            const $googleDescription = $('#google-calendar-settings').next('p.description');
+
+            if (calendarType === 'google') {
+                $googleSettings.show();
+                $googleDescription.show();
+            } else {
+                $googleSettings.hide();
+                $googleDescription.hide();
+            }
+        }
+    }
+
+    /**
      * Initialize on DOM ready
      */
     $(document).ready(function() {
         new AdminBookingManager();
         new CalendarManager();
+        new SettingsManager();
     });
 
 })(jQuery);

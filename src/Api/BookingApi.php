@@ -283,7 +283,7 @@ class BookingApi extends WP_REST_Controller
     /**
      * Validate booking data
      */
-    private function validateBookingData(array $data): true|WP_Error
+    private function validateBookingData(array $data): bool|WP_Error
     {
         if (empty($data['customer_name'])) {
             return new WP_Error('invalid_data', __('Customer name is required', 'hb-booking'), ['status' => 400]);
