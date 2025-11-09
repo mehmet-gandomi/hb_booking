@@ -103,7 +103,7 @@ class Assets
         wp_localize_script('hb-booking-admin', 'hbBookingAdmin', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'restUrl' => rest_url('hb-booking/v1'),
-            'nonce' => wp_create_nonce('hb_booking_nonce'),
+            'nonce' => wp_create_nonce('wp_rest'),
         ]);
     }
 }
