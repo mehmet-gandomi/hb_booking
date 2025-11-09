@@ -331,7 +331,7 @@ class BookingAdmin
                                 id="hb_booking_google_client_id"
                                 name="hb_booking_google_client_id"
                                 value="<?php echo esc_attr(get_option('hb_booking_google_client_id', '')); ?>"
-                                class="large-text"
+                                class="regular-text"
                             />
                             <p class="description">
                                 <?php esc_html_e('OAuth 2.0 Client ID from Google Cloud Console', 'hb-booking'); ?>
@@ -351,7 +351,7 @@ class BookingAdmin
                                 id="hb_booking_google_client_secret"
                                 name="hb_booking_google_client_secret"
                                 value="<?php echo esc_attr(get_option('hb_booking_google_client_secret', '')); ?>"
-                                class="large-text"
+                                class="regular-text"
                             />
                             <p class="description">
                                 <?php esc_html_e('OAuth 2.0 Client Secret from Google Cloud Console', 'hb-booking'); ?>
