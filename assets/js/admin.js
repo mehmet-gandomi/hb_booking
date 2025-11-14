@@ -19,11 +19,65 @@
         }
 
         initDatepicker() {
-            if ($.fn.datepicker) {
-                $('.hb-datepicker').datepicker({
-                    dateFormat: 'yy-mm-dd',
-                    minDate: 0
-                });
+            console.log('🔧 HB Booking Admin: initDatepicker called');
+
+            if (typeof hbBookingAdmin === 'undefined') {
+                console.error('❌ HB Booking Admin: hbBookingAdmin object not found');
+                return;
+            }
+
+            console.log('📊 HB Booking Admin: hbBookingAdmin object:', hbBookingAdmin);
+
+            if (typeof hbBookingAdmin.dateConfig === 'undefined') {
+                console.warn('⚠️ HB Booking Admin: dateConfig not found, using Gregorian');
+            } else {
+                console.log('📅 HB Booking Admin: dateConfig:', hbBookingAdmin.dateConfig);
+                console.log('📅 HB Booking Admin: calendar_type:', hbBookingAdmin.dateConfig.calendar_type);
+            }
+
+            // Check if Persian datepicker is needed
+            if (typeof hbBookingAdmin.dateConfig !== 'undefined' &&
+                hbBookingAdmin.dateConfig.calendar_type === 'jalali') {
+                console.log('✅ HB Booking Admin: Jalali calendar detected');
+
+                const $elements = $('.hb-datepicker');
+                console.log('🎯 HB Booking Admin: Found', $elements.length, 'elements with class .hb-datepicker');
+
+                // Initialize Persian datepicker
+                if (typeof $.fn.pDatepicker !== 'undefined') {
+                    console.log('✅ HB Booking Admin: pDatepicker plugin available');
+                    try {
+                        $elements.pDatepicker({
+                            format: 'YYYY-MM-DD',
+                            initialValue: false,
+                            autoClose: true,
+                            minDate: new Date().getTime(),
+                            observer: true,
+                            altFormat: 'YYYY-MM-DD',
+                            calendarType: 'persian',
+                            viewMode: 'day'
+                        });
+                        console.log('✅ HB Booking Admin: Persian datepicker initialized successfully');
+                    } catch (error) {
+                        console.error('❌ HB Booking Admin: Error initializing pDatepicker:', error);
+                    }
+                } else {
+                    console.error('❌ HB Booking Admin: pDatepicker plugin not loaded');
+                    console.log('📦 Available jQuery plugins:', Object.keys($.fn).filter(k => k.toLowerCase().includes('date')));
+                }
+            } else {
+                console.log('ℹ️ HB Booking Admin: Using Gregorian calendar');
+                // Initialize jQuery UI datepicker for Gregorian
+                if ($.fn.datepicker) {
+                    console.log('✅ HB Booking Admin: jQuery UI datepicker available');
+                    $('.hb-datepicker').datepicker({
+                        dateFormat: 'yy-mm-dd',
+                        minDate: 0
+                    });
+                    console.log('✅ HB Booking Admin: jQuery UI datepicker initialized');
+                } else {
+                    console.error('❌ HB Booking Admin: jQuery UI datepicker not available');
+                }
             }
         }
 

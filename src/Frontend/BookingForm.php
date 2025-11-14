@@ -6,12 +6,16 @@
 
 namespace HB\Booking\Frontend;
 
+use HB\Booking\Services\DateConverter;
+
 class BookingForm
 {
     private static ?BookingForm $instance = null;
+    private DateConverter $date_converter;
 
     private function __construct()
     {
+        $this->date_converter = DateConverter::getInstance();
         add_shortcode('hb_booking_form', [$this, 'renderForm']);
     }
 
@@ -105,15 +109,28 @@ class BookingForm
                         <label for="hb-booking-date">
                             <?php esc_html_e('Preferred Date', 'hb-booking'); ?> <span class="required">*</span>
                         </label>
-                        <input
-                            type="date"
-                            id="hb-booking-date"
-                            name="booking_date"
-                            class="hb-form-control"
-                            min="<?php echo esc_attr(date('Y-m-d')); ?>"
-                            required
-                            aria-required="true"
-                        />
+                        <?php if ($this->date_converter->isJalali()): ?>
+                            <input
+                                type="text"
+                                id="hb-booking-date"
+                                name="booking_date"
+                                class="hb-form-control hb-datepicker-jalali"
+                                required
+                                aria-required="true"
+                                autocomplete="off"
+                                placeholder="YYYY-MM-DD"
+                            />
+                        <?php else: ?>
+                            <input
+                                type="date"
+                                id="hb-booking-date"
+                                name="booking_date"
+                                class="hb-form-control"
+                                min="<?php echo esc_attr(date('Y-m-d')); ?>"
+                                required
+                                aria-required="true"
+                            />
+                        <?php endif; ?>
                     </div>
 
                     <div class="hb-form-group">

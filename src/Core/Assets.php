@@ -6,12 +6,16 @@
 
 namespace HB\Booking\Core;
 
+use HB\Booking\Services\DateConverter;
+
 class Assets
 {
     private static ?Assets $instance = null;
+    private DateConverter $date_converter;
 
     private function __construct()
     {
+        $this->date_converter = DateConverter::getInstance();
         add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendAssets']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
     }
@@ -37,10 +41,54 @@ class Assets
             HB_BOOKING_VERSION
         );
 
+        // Enqueue Persian datepicker if Jalali calendar is enabled
+        if ($this->date_converter->isJalali()) {
+            wp_enqueue_style(
+                'persian-datepicker',
+                HB_BOOKING_PLUGIN_URL . 'assets/css/persian-datepicker.min.css',
+                [],
+                '1.2.0'
+            );
+
+            // Load dependencies for Persian datepicker from local files
+            // Load moment.js first
+            wp_enqueue_script(
+                'moment',
+                HB_BOOKING_PLUGIN_URL . 'assets/js/moment.min.js',
+                [],
+                '2.29.4',
+                true
+            );
+
+            // Then persian-date (depends on moment)
+            wp_enqueue_script(
+                'persian-date',
+                HB_BOOKING_PLUGIN_URL . 'assets/js/persian-date.min.js',
+                ['moment'],
+                '1.1.0',
+                true
+            );
+
+            // Then persian-datepicker (depends on jQuery, moment, and persian-date)
+            wp_enqueue_script(
+                'persian-datepicker',
+                HB_BOOKING_PLUGIN_URL . 'assets/js/persian-datepicker.min.js',
+                ['jquery', 'moment', 'persian-date'],
+                '1.2.0',
+                true
+            );
+        }
+
+        // Set proper dependencies for frontend.js
+        $frontend_deps = ['jquery'];
+        if ($this->date_converter->isJalali()) {
+            $frontend_deps = ['jquery', 'moment', 'persian-date', 'persian-datepicker'];
+        }
+
         wp_enqueue_script(
             'hb-booking-frontend',
             HB_BOOKING_PLUGIN_URL . 'assets/js/frontend.js',
-            ['jquery'],
+            $frontend_deps,
             HB_BOOKING_VERSION,
             true
         );
@@ -49,6 +97,7 @@ class Assets
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'restUrl' => rest_url('hb-booking/v1'),
             'nonce' => wp_create_nonce('wp_rest'),
+            'dateConfig' => $this->date_converter->getDatepickerConfig(),
             'i18n' => [
                 'pleaseWait' => __('Please wait...', 'hb-booking'),
                 'error' => __('An error occurred', 'hb-booking'),
@@ -90,20 +139,65 @@ class Assets
             HB_BOOKING_VERSION
         );
 
+        // Enqueue datepicker based on calendar type
+        $dependencies = ['jquery', 'fullcalendar'];
+
+        if ($this->date_converter->isJalali()) {
+            // Enqueue Persian datepicker for Jalali calendar
+            wp_enqueue_style(
+                'persian-datepicker',
+                HB_BOOKING_PLUGIN_URL . 'assets/css/persian-datepicker.min.css',
+                [],
+                '1.2.0'
+            );
+
+            // Load dependencies for Persian datepicker from local files
+            wp_enqueue_script(
+                'moment',
+                HB_BOOKING_PLUGIN_URL . 'assets/js/moment.min.js',
+                [],
+                '2.29.4',
+                true
+            );
+
+            wp_enqueue_script(
+                'persian-date',
+                HB_BOOKING_PLUGIN_URL . 'assets/js/persian-date.min.js',
+                ['moment'],
+                '1.1.0',
+                true
+            );
+
+            wp_enqueue_script(
+                'persian-datepicker',
+                HB_BOOKING_PLUGIN_URL . 'assets/js/persian-datepicker.min.js',
+                ['jquery', 'moment', 'persian-date'],
+                '1.2.0',
+                true
+            );
+
+            $dependencies[] = 'moment';
+            $dependencies[] = 'persian-date';
+            $dependencies[] = 'persian-datepicker';
+        } else {
+            // Enqueue jQuery UI datepicker for Gregorian calendar
+            wp_enqueue_style('jquery-ui-datepicker');
+            $dependencies[] = 'jquery-ui-datepicker';
+        }
+
         wp_enqueue_script(
             'hb-booking-admin',
             HB_BOOKING_PLUGIN_URL . 'assets/js/admin.js',
-            ['jquery', 'jquery-ui-datepicker', 'fullcalendar'],
+            $dependencies,
             HB_BOOKING_VERSION,
             true
         );
-
-        wp_enqueue_style('jquery-ui-datepicker');
 
         wp_localize_script('hb-booking-admin', 'hbBookingAdmin', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'restUrl' => rest_url('hb-booking/v1'),
             'nonce' => wp_create_nonce('wp_rest'),
+            'dateConfig' => $this->date_converter->getDatepickerConfig(),
         ]);
     }
 }

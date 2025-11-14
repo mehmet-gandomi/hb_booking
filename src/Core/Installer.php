@@ -60,6 +60,7 @@ class Installer
     {
         $defaults = [
             'hb_booking_admin_email' => get_option('admin_email'),
+            'hb_booking_calendar_type' => 'gregorian',
             'hb_booking_time_format' => 'H:i',
             'hb_booking_date_format' => 'Y-m-d',
             'hb_booking_enable_notifications' => true,

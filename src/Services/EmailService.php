@@ -9,9 +9,11 @@ namespace HB\Booking\Services;
 class EmailService
 {
     private static ?EmailService $instance = null;
+    private DateConverter $dateConverter;
 
     private function __construct()
     {
+        $this->dateConverter = DateConverter::getInstance();
         add_filter('wp_mail_content_type', [$this, 'setHtmlContentType']);
     }
 
@@ -109,7 +111,7 @@ class EmailService
      */
     private function getConfirmationEmailTemplate(object $booking): string
     {
-        $date = date_i18n(get_option('date_format'), strtotime($booking->booking_date));
+        $date = $this->dateConverter->formatDate($booking->booking_date);
         $time = date_i18n(get_option('time_format'), strtotime($booking->booking_time));
 
         ob_start();
@@ -176,7 +178,7 @@ class EmailService
      */
     private function getAdminNotificationTemplate(object $booking): string
     {
-        $date = date_i18n(get_option('date_format'), strtotime($booking->booking_date));
+        $date = $this->dateConverter->formatDate($booking->booking_date);
         $time = date_i18n(get_option('time_format'), strtotime($booking->booking_time));
 
         ob_start();
@@ -238,7 +240,7 @@ class EmailService
      */
     private function getStatusUpdateTemplate(object $booking): string
     {
-        $date = date_i18n(get_option('date_format'), strtotime($booking->booking_date));
+        $date = $this->dateConverter->formatDate($booking->booking_date);
         $time = date_i18n(get_option('time_format'), strtotime($booking->booking_time));
 
         $status_colors = [

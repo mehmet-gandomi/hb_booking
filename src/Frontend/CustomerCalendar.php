@@ -7,15 +7,18 @@
 namespace HB\Booking\Frontend;
 
 use HB\Booking\Core\Database;
+use HB\Booking\Services\DateConverter;
 
 class CustomerCalendar
 {
     private static ?CustomerCalendar $instance = null;
     private Database $database;
+    private DateConverter $dateConverter;
 
     private function __construct()
     {
         $this->database = Database::getInstance();
+        $this->dateConverter = DateConverter::getInstance();
         add_shortcode('hb_customer_calendar', [$this, 'renderCalendar']);
     }
 
@@ -54,7 +57,7 @@ class CustomerCalendar
                     <?php foreach ($bookings as $booking): ?>
                         <div class="hb-booking-item hb-booking-status-<?php echo esc_attr($booking->status); ?>">
                             <div class="hb-booking-date">
-                                <span class="hb-date"><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($booking->booking_date))); ?></span>
+                                <span class="hb-date"><?php echo esc_html($this->dateConverter->formatDate($booking->booking_date)); ?></span>
                                 <span class="hb-time"><?php echo esc_html(date_i18n(get_option('time_format'), strtotime($booking->booking_time))); ?></span>
                             </div>
                             <div class="hb-booking-details">

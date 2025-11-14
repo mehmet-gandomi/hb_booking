@@ -7,15 +7,18 @@
 namespace HB\Booking\Admin;
 
 use HB\Booking\Core\Database;
+use HB\Booking\Services\DateConverter;
 
 class BookingAdmin
 {
     private static ?BookingAdmin $instance = null;
     private Database $database;
+    private DateConverter $dateConverter;
 
     private function __construct()
     {
         $this->database = Database::getInstance();
+        $this->dateConverter = DateConverter::getInstance();
 
         add_action('admin_menu', [$this, 'addAdminMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
@@ -89,6 +92,7 @@ class BookingAdmin
     public function registerSettings(): void
     {
         register_setting('hb_booking_settings', 'hb_booking_admin_email');
+        register_setting('hb_booking_settings', 'hb_booking_calendar_type');
         register_setting('hb_booking_settings', 'hb_booking_time_format');
         register_setting('hb_booking_settings', 'hb_booking_date_format');
         register_setting('hb_booking_settings', 'hb_booking_enable_notifications');
@@ -169,7 +173,7 @@ class BookingAdmin
                                 </td>
                                 <td>
                                     <?php
-                                    echo esc_html(date_i18n(get_option('date_format'), strtotime($booking->booking_date)));
+                                    echo esc_html($this->dateConverter->formatDate($booking->booking_date));
                                     echo '<br>';
                                     echo esc_html(date_i18n(get_option('time_format'), strtotime($booking->booking_time)));
                                     ?>
@@ -258,6 +262,27 @@ class BookingAdmin
                             />
                             <p class="description">
                                 <?php esc_html_e('Email address to receive booking notifications', 'hb-booking'); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="hb_booking_calendar_type">
+                                <?php esc_html_e('Calendar Type', 'hb-booking'); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <select id="hb_booking_calendar_type" name="hb_booking_calendar_type">
+                                <option value="gregorian" <?php selected(get_option('hb_booking_calendar_type', 'gregorian'), 'gregorian'); ?>>
+                                    <?php esc_html_e('Gregorian', 'hb-booking'); ?>
+                                </option>
+                                <option value="jalali" <?php selected(get_option('hb_booking_calendar_type'), 'jalali'); ?>>
+                                    <?php esc_html_e('Jalali (Persian)', 'hb-booking'); ?>
+                                </option>
+                            </select>
+                            <p class="description">
+                                <?php esc_html_e('Choose calendar system for date display and input', 'hb-booking'); ?>
                             </p>
                         </td>
                     </tr>

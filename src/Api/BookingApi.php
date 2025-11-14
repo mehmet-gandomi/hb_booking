@@ -9,6 +9,7 @@ namespace HB\Booking\Api;
 use HB\Booking\Core\Database;
 use HB\Booking\Services\EmailService;
 use HB\Booking\Services\CalendarService;
+use HB\Booking\Services\DateConverter;
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_REST_Request;
@@ -21,6 +22,7 @@ class BookingApi extends WP_REST_Controller
     private Database $database;
     private EmailService $emailService;
     private CalendarService $calendarService;
+    private DateConverter $dateConverter;
 
     protected $namespace = 'hb-booking/v1';
     protected $rest_base = 'bookings';
@@ -30,6 +32,7 @@ class BookingApi extends WP_REST_Controller
         $this->database = Database::getInstance();
         $this->emailService = EmailService::getInstance();
         $this->calendarService = CalendarService::getInstance();
+        $this->dateConverter = DateConverter::getInstance();
 
         add_action('rest_api_init', [$this, 'registerRoutes']);
         add_filter('rest_authentication_errors', [$this, 'allowPublicAccess'], 100);
@@ -153,12 +156,15 @@ class BookingApi extends WP_REST_Controller
             );
         }
 
+        // Convert date to Gregorian for database storage
+        $gregorian_date = $this->dateConverter->prepareForDatabase($params['booking_date']);
+
         // Create booking
         $booking_data = [
             'customer_name' => $params['customer_name'],
             'customer_email' => $params['customer_email'],
             'customer_phone' => $params['customer_phone'],
-            'booking_date' => $params['booking_date'],
+            'booking_date' => $gregorian_date,
             'booking_time' => $params['booking_time'],
             'service' => $params['service'] ?? '',
             'notes' => $params['notes'] ?? '',
@@ -299,6 +305,11 @@ class BookingApi extends WP_REST_Controller
 
         if (empty($data['booking_date'])) {
             return new WP_Error('invalid_data', __('Booking date is required', 'hb-booking'), ['status' => 400]);
+        }
+
+        // Validate date format based on calendar type
+        if (!$this->dateConverter->isValidDate($data['booking_date'])) {
+            return new WP_Error('invalid_data', __('Invalid date format', 'hb-booking'), ['status' => 400]);
         }
 
         if (empty($data['booking_time'])) {
