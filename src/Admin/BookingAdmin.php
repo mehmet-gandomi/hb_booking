@@ -207,13 +207,24 @@ class BookingAdmin
     public function renderCalendarPage(): void
     {
         $bookings = $this->database->getBookings();
+        $is_jalali = $this->dateConverter->isJalali();
 
         // Prepare events for calendar
         $events = [];
         foreach ($bookings as $booking) {
+            // For Jalali calendar, we need both Gregorian (for FullCalendar) and Jalali (for display)
+            if ($is_jalali) {
+                $jalali_date = $this->dateConverter->toJalali($booking->booking_date, 'Y/m/d');
+                $display_title = $booking->customer_name .
+                    ($booking->service ? " - {$booking->service}" : '') .
+                    " ({$jalali_date})";
+            } else {
+                $display_title = $booking->customer_name . ($booking->service ? " - {$booking->service}" : '');
+            }
+
             $events[] = [
                 'id' => $booking->id,
-                'title' => $booking->customer_name . ($booking->service ? " - {$booking->service}" : ''),
+                'title' => $display_title,
                 'start' => $booking->booking_date . 'T' . $booking->booking_time,
                 'backgroundColor' => $this->getStatusColor($booking->status),
                 'borderColor' => $this->getStatusColor($booking->status),
@@ -221,6 +232,8 @@ class BookingAdmin
                     'email' => $booking->customer_email,
                     'phone' => $booking->customer_phone,
                     'status' => $booking->status,
+                    'gregorian_date' => $booking->booking_date,
+                    'jalali_date' => $is_jalali ? $jalali_date : null,
                 ]
             ];
         }
@@ -228,7 +241,9 @@ class BookingAdmin
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Booking Calendar', 'hb-booking'); ?></h1>
-            <div id="hb-booking-calendar" data-events='<?php echo esc_attr(json_encode($events)); ?>'></div>
+            <div id="hb-booking-calendar"
+                 data-events='<?php echo esc_attr(json_encode($events)); ?>'
+                 data-calendar-type='<?php echo esc_attr($is_jalali ? 'jalali' : 'gregorian'); ?>'></div>
         </div>
         <?php
     }

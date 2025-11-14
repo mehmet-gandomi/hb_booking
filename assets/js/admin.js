@@ -140,6 +140,8 @@
 
         initCalendar() {
             const eventsData = this.calendarEl.getAttribute('data-events');
+            const calendarType = this.calendarEl.getAttribute('data-calendar-type');
+            const isJalali = calendarType === 'jalali';
             let events = [];
 
             try {
@@ -148,7 +150,7 @@
                 console.error('Error parsing calendar events:', error);
             }
 
-            const calendar = new FullCalendar.Calendar(this.calendarEl, {
+            const calendarConfig = {
                 initialView: 'dayGridMonth',
                 headerToolbar: {
                     left: 'prev,next today',
@@ -157,7 +159,7 @@
                 },
                 events: events,
                 eventClick: (info) => {
-                    this.showEventDetails(info.event);
+                    this.showEventDetails(info.event, isJalali);
                 },
                 height: 'auto',
                 navLinks: true,
@@ -167,21 +169,91 @@
                     hour: '2-digit',
                     minute: '2-digit',
                     meridiem: false
+                },
+                buttonText: {
+                    today: isJalali ? 'امروز' : 'Today',
+                    month: isJalali ? 'ماه' : 'Month',
+                    week: isJalali ? 'هفته' : 'Week',
+                    day: isJalali ? 'روز' : 'Day',
+                    list: isJalali ? 'لیست' : 'List'
                 }
-            });
+            };
 
+            // Add Persian locale support if Jalali
+            if (isJalali) {
+                calendarConfig.locale = 'fa';
+                calendarConfig.direction = 'rtl';
+                calendarConfig.firstDay = 6; // Start week on Saturday (شنبه) for Persian calendar
+
+                // Custom day header names in Persian
+                calendarConfig.dayHeaderContent = function(arg) {
+                    const persianDayNames = ['یک شنبه', 'دو شنبه', 'سه شنبه', 'چهار شنبه', 'پنج شنبه', 'جمعه', 'شنبه']; // Yekshanbeh to Shanbeh
+                    return persianDayNames[arg.dow];
+                };
+
+                // Override the title formatter to show Jalali dates
+                const self = this;
+                calendarConfig.viewDidMount = function(info) {
+                    const titleEl = info.el.querySelector('.fc-toolbar-title');
+                    if (titleEl && info.view.currentStart) {
+                        const jalaliTitle = self.getJalaliMonthYear(info.view.currentStart);
+                        titleEl.textContent = jalaliTitle;
+                    }
+                };
+            }
+
+            const calendar = new FullCalendar.Calendar(this.calendarEl, calendarConfig);
             calendar.render();
         }
 
-        showEventDetails(event) {
+        getJalaliMonthYear(gregorianDate) {
+            const jalaliMonths = [
+                'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+            ];
+
+            // Ensure we have a Date object
+            if (!(gregorianDate instanceof Date)) {
+                gregorianDate = new Date(gregorianDate);
+            }
+
+            // Use Persian date library if available
+            if (typeof persianDate !== 'undefined') {
+                try {
+                    // Convert Date object to Unix timestamp (milliseconds)
+                    const timestamp = gregorianDate.getTime();
+                    const pDate = new persianDate(timestamp);
+                    const month = pDate.month(); // 1-12
+                    const year = pDate.year();
+                    return `${jalaliMonths[month - 1]} ${year}`;
+                } catch (error) {
+                    console.error('Error converting to Jalali:', error);
+                    // Fall through to fallback method
+                }
+            }
+
+            // Fallback: approximate conversion
+            const year = gregorianDate.getFullYear();
+            const month = gregorianDate.getMonth();
+            const jalaliYear = year - 621;
+
+            return `${jalaliMonths[month]} ${jalaliYear}`;
+        }
+
+        showEventDetails(event, isJalali) {
             const props = event.extendedProps;
+            const dateLabel = isJalali ? 'تاریخ' : 'Date';
+            const dateValue = isJalali && props.jalali_date ?
+                props.jalali_date + ' ' + event.start.toLocaleTimeString('fa-IR', {hour: '2-digit', minute: '2-digit'}) :
+                event.start.toLocaleString();
+
             const details = `
-            Booking Details:
-            Name: ${event.title}
-            Email: ${props.email || 'N/A'}
-            Phone: ${props.phone || 'N/A'}
-            Status: ${props.status}
-            Date/Time: ${event.start.toLocaleString()}
+            ${isJalali ? 'جزئیات رزرو' : 'Booking Details'}:
+            ${isJalali ? 'نام' : 'Name'}: ${event.title}
+            ${isJalali ? 'ایمیل' : 'Email'}: ${props.email || 'N/A'}
+            ${isJalali ? 'تلفن' : 'Phone'}: ${props.phone || 'N/A'}
+            ${isJalali ? 'وضعیت' : 'Status'}: ${props.status}
+            ${dateLabel}: ${dateValue}
             `.trim();
 
             alert(details);
