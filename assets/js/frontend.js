@@ -117,7 +117,7 @@
                     this.hideMessage();
                 }
             } catch (error) {
-                console.error('Error checking availability:', error);
+                // Silently handle availability check errors
             }
         }
 
@@ -155,9 +155,39 @@
     }
 
     /**
+     * Initialize Persian Datepicker
+     */
+    function initPersianDatepicker() {
+
+        if (hbBooking.dateConfig.calendar_type === 'jalali') {
+
+            const $elements = $('.hb-datepicker-jalali');
+
+            try {
+                $elements.pDatepicker({
+                    format: 'YYYY-MM-DD',
+                    initialValue: false,
+                    autoClose: true,
+                    minDate: new Date().getTime(),
+                    observer: true,
+                    altField: '#hb-booking-date',
+                    altFormat: 'YYYY-MM-DD',
+                    calendarType: 'persian',
+                    viewMode: 'day'
+                });
+            } catch (error) {
+                // Silently handle datepicker initialization errors
+            }
+        }
+    }
+
+    /**
      * Initialize on DOM ready
      */
     $(document).ready(function() {
+        // Initialize Persian datepicker if needed
+        initPersianDatepicker();
+
         // Initialize all booking forms
         $('.hb-booking-form').each(function() {
             new BookingForm(this);
