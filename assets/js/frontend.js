@@ -173,7 +173,32 @@
                     altField: '#hb-booking-date',
                     altFormat: 'YYYY-MM-DD',
                     calendarType: 'persian',
-                    viewMode: 'day'
+                    viewMode: 'day',
+                    formatter: function(unix) {
+                        // Force English numbers instead of Persian digits
+                        const pDate = new persianDate(unix);
+                        const year = pDate.year();
+                        const month = String(pDate.month()).padStart(2, '0');
+                        const day = String(pDate.date()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    },
+                    altFieldFormatter: function(unix) {
+                        // Ensure altField also gets English numbers
+                        const pDate = new persianDate(unix);
+                        const year = pDate.year();
+                        const month = String(pDate.month()).padStart(2, '0');
+                        const day = String(pDate.date()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    },
+                    onSelect: function(unix) {
+                        // Manually set the value with English numbers
+                        const pDate = new persianDate(unix);
+                        const year = pDate.year();
+                        const month = String(pDate.month()).padStart(2, '0');
+                        const day = String(pDate.date()).padStart(2, '0');
+                        const dateStr = `${year}-${month}-${day}`;
+                        $('#hb-booking-date').val(dateStr).trigger('change');
+                    }
                 });
             } catch (error) {
                 // Silently handle datepicker initialization errors

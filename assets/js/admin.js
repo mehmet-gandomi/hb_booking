@@ -55,7 +55,24 @@
                             observer: true,
                             altFormat: 'YYYY-MM-DD',
                             calendarType: 'persian',
-                            viewMode: 'day'
+                            viewMode: 'day',
+                            formatter: function(unix) {
+                                // Force English numbers instead of Persian digits
+                                const pDate = new persianDate(unix);
+                                const year = pDate.year();
+                                const month = String(pDate.month()).padStart(2, '0');
+                                const day = String(pDate.date()).padStart(2, '0');
+                                return `${year}-${month}-${day}`;
+                            },
+                            onSelect: function(unix) {
+                                // Manually set the value with English numbers
+                                const pDate = new persianDate(unix);
+                                const year = pDate.year();
+                                const month = String(pDate.month()).padStart(2, '0');
+                                const day = String(pDate.date()).padStart(2, '0');
+                                const dateStr = `${year}-${month}-${day}`;
+                                $(this).val(dateStr).trigger('change');
+                            }
                         });
                         console.log('✅ HB Booking Admin: Persian datepicker initialized successfully');
                     } catch (error) {
