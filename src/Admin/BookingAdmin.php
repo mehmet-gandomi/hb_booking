@@ -236,6 +236,10 @@ class BookingAdmin
                     'status' => $booking->status,
                     'business_status' => $booking->business_status,
                     'target_country' => $booking->target_country,
+                    'team_description' => $booking->team_description,
+                    'idea_description' => $booking->idea_description,
+                    'service_description' => $booking->service_description,
+                    'notes' => $booking->notes,
                     'gregorian_date' => $booking->booking_date,
                     'jalali_date' => $is_jalali ? $jalali_date : null,
                 ]

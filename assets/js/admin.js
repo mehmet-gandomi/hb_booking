@@ -10,12 +10,39 @@
      */
     class AdminBookingManager {
         constructor() {
+            this.isJalali = typeof hbBookingAdmin !== 'undefined' &&
+                           hbBookingAdmin.dateConfig &&
+                           hbBookingAdmin.dateConfig.calendar_type === 'jalali';
             this.init();
         }
 
         init() {
             this.initDatepicker();
             this.bindEvents();
+        }
+
+        /**
+         * Convert Gregorian date to Jalali if needed
+         */
+        formatDate(gregorianDate) {
+            if (!gregorianDate) return '';
+
+            if (this.isJalali && typeof persianDate !== 'undefined') {
+                try {
+                    const parts = gregorianDate.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const day = parseInt(parts[2]);
+                    const date = new Date(year, month - 1, day);
+                    const pDate = new persianDate(date);
+                    return pDate.format('YYYY/MM/DD');
+                } catch (error) {
+                    console.error('Error converting date:', error);
+                    return gregorianDate;
+                }
+            }
+
+            return gregorianDate;
         }
 
         initDatepicker() {
@@ -75,6 +102,12 @@
         }
 
         bindEvents() {
+            // View booking
+            $(document).on('click', '.hb-view-booking', (e) => {
+                const bookingId = $(e.currentTarget).data('id');
+                this.viewBooking(bookingId);
+            });
+
             // Edit booking
             $(document).on('click', '.hb-edit-booking', (e) => {
                 const bookingId = $(e.currentTarget).data('id');
@@ -86,6 +119,201 @@
                 const bookingId = $(e.currentTarget).data('id');
                 this.deleteBooking(bookingId);
             });
+
+            // Close modal
+            $(document).on('click', '.hb-modal-close, .hb-modal-overlay', (e) => {
+                if (e.target === e.currentTarget) {
+                    this.closeModal();
+                }
+            });
+
+            // Save status change
+            $(document).on('click', '.hb-save-status', (e) => {
+                const bookingId = $(e.currentTarget).data('id');
+                this.saveStatus(bookingId);
+            });
+        }
+
+        async viewBooking(bookingId) {
+            try {
+                const response = await fetch(`${hbBookingAdmin.restUrl}/bookings/${bookingId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': hbBookingAdmin.nonce
+                    }
+                });
+
+                if (response.ok) {
+                    const booking = await response.json();
+                    this.showBookingModal(booking);
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to load booking'));
+                }
+            } catch (error) {
+                console.error('Error loading booking:', error);
+                alert('Error: Failed to load booking');
+            }
+        }
+
+        showBookingModal(booking) {
+            // Create modal HTML
+            const modalHtml = `
+                <div class="hb-modal-overlay">
+                    <div class="hb-modal">
+                        <div class="hb-modal-header">
+                            <h2>Booking Details #${booking.id}</h2>
+                            <button class="hb-modal-close">&times;</button>
+                        </div>
+                        <div class="hb-modal-body">
+                            <div class="hb-booking-details">
+                                <h3 style="margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Customer Information</h3>
+                                <div class="hb-detail-row">
+                                    <strong>Customer Name:</strong>
+                                    <span>${this.escapeHtml(booking.customer_name)}</span>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Email:</strong>
+                                    <span><a href="mailto:${this.escapeHtml(booking.customer_email)}">${this.escapeHtml(booking.customer_email)}</a></span>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Phone:</strong>
+                                    <span><a href="tel:${this.escapeHtml(booking.customer_phone)}">${this.escapeHtml(booking.customer_phone)}</a></span>
+                                </div>
+
+                                <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Booking Information</h3>
+                                <div class="hb-detail-row">
+                                    <strong>Date:</strong>
+                                    <span>${this.escapeHtml(this.formatDate(booking.booking_date))}${this.isJalali ? ' <small style="color: #888;">(Jalali)</small>' : ''}</span>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Time:</strong>
+                                    <span>${this.escapeHtml(booking.booking_time)}</span>
+                                </div>
+                                ${booking.business_status ? `
+                                <div class="hb-detail-row">
+                                    <strong>Business Status:</strong>
+                                    <span>${this.escapeHtml(booking.business_status)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.target_country ? `
+                                <div class="hb-detail-row">
+                                    <strong>Target Country:</strong>
+                                    <span>${this.escapeHtml(booking.target_country)}</span>
+                                </div>
+                                ` : ''}
+
+                                ${booking.team_description || booking.idea_description || booking.service_description ? `
+                                <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Additional Details</h3>
+                                ` : ''}
+                                ${booking.team_description ? `
+                                <div class="hb-detail-row">
+                                    <strong>Team Description:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.team_description)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.idea_description ? `
+                                <div class="hb-detail-row">
+                                    <strong>Idea Description:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.idea_description)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.service_description ? `
+                                <div class="hb-detail-row">
+                                    <strong>Service Description:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.service_description)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.notes ? `
+                                <div class="hb-detail-row">
+                                    <strong>Notes:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.notes)}</span>
+                                </div>
+                                ` : ''}
+
+                                <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Status & Metadata</h3>
+                                <div class="hb-detail-row hb-status-row">
+                                    <strong>Status:</strong>
+                                    <select class="hb-status-select" data-original="${this.escapeHtml(booking.status)}">
+                                        <option value="pending" ${booking.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="confirmed" ${booking.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                        <option value="cancelled" ${booking.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                        <option value="completed" ${booking.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                    </select>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Created:</strong>
+                                    <span>${this.escapeHtml(booking.created_at)}</span>
+                                </div>
+                                ${booking.updated_at && booking.updated_at !== booking.created_at ? `
+                                <div class="hb-detail-row">
+                                    <strong>Last Updated:</strong>
+                                    <span>${this.escapeHtml(booking.updated_at)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.google_event_id ? `
+                                <div class="hb-detail-row">
+                                    <strong>Google Event ID:</strong>
+                                    <span style="font-family: monospace; font-size: 11px;">${this.escapeHtml(booking.google_event_id)}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="hb-modal-footer">
+                            <button class="button button-primary hb-save-status" data-id="${booking.id}">Update Status</button>
+                            <button class="button hb-modal-close">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add modal to body
+            $('body').append(modalHtml);
+        }
+
+        closeModal() {
+            $('.hb-modal-overlay').remove();
+        }
+
+        async saveStatus(bookingId) {
+            const newStatus = $('.hb-status-select').val();
+            const originalStatus = $('.hb-status-select').data('original');
+
+            if (newStatus === originalStatus) {
+                alert('No changes to save');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${hbBookingAdmin.restUrl}/bookings/${bookingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': hbBookingAdmin.nonce
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                });
+
+                if (response.ok) {
+                    this.closeModal();
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to update status'));
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error: Failed to update status');
+            }
+        }
+
+        escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         async editBooking(bookingId) {
@@ -126,9 +354,52 @@
     class CalendarManager {
         constructor() {
             this.calendarEl = document.getElementById('hb-booking-calendar');
+            this.isJalali = typeof hbBookingAdmin !== 'undefined' &&
+                           hbBookingAdmin.dateConfig &&
+                           hbBookingAdmin.dateConfig.calendar_type === 'jalali';
             if (this.calendarEl) {
                 this.initCalendar();
+                this.bindEvents();
             }
+        }
+
+        /**
+         * Convert Gregorian date to Jalali if needed
+         */
+        formatDate(gregorianDate) {
+            if (!gregorianDate) return '';
+
+            if (this.isJalali && typeof persianDate !== 'undefined') {
+                try {
+                    const parts = gregorianDate.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const day = parseInt(parts[2]);
+                    const date = new Date(year, month - 1, day);
+                    const pDate = new persianDate(date);
+                    return pDate.format('YYYY/MM/DD');
+                } catch (error) {
+                    console.error('Error converting date:', error);
+                    return gregorianDate;
+                }
+            }
+
+            return gregorianDate;
+        }
+
+        bindEvents() {
+            // Close modal
+            $(document).on('click', '.hb-modal-close, .hb-modal-overlay', (e) => {
+                if (e.target === e.currentTarget) {
+                    this.closeModal();
+                }
+            });
+
+            // Save status change from calendar modal
+            $(document).on('click', '.hb-save-status', (e) => {
+                const bookingId = $(e.currentTarget).data('id');
+                this.saveStatus(bookingId);
+            });
         }
 
         initCalendar() {
@@ -152,7 +423,7 @@
                 },
                 events: events,
                 eventClick: (info) => {
-                    this.showEventDetails(info.event, isJalali);
+                    this.handleEventClick(info.event.id);
                 },
                 height: 'auto',
                 navLinks: true,
@@ -233,23 +504,186 @@
             return `${jalaliMonths[month]} ${jalaliYear}`;
         }
 
-        showEventDetails(event, isJalali) {
-            const props = event.extendedProps;
-            const dateLabel = isJalali ? 'تاریخ' : 'Date';
-            const dateValue = isJalali && props.jalali_date ?
-                props.jalali_date + ' ' + event.start.toLocaleTimeString('fa-IR', {hour: '2-digit', minute: '2-digit'}) :
-                event.start.toLocaleString();
+        async handleEventClick(bookingId) {
+            try {
+                const response = await fetch(`${hbBookingAdmin.restUrl}/bookings/${bookingId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': hbBookingAdmin.nonce
+                    }
+                });
 
-            const details = `
-            ${isJalali ? 'جزئیات رزرو' : 'Booking Details'}:
-            ${isJalali ? 'نام' : 'Name'}: ${event.title}
-            ${isJalali ? 'ایمیل' : 'Email'}: ${props.email || 'N/A'}
-            ${isJalali ? 'تلفن' : 'Phone'}: ${props.phone || 'N/A'}
-            ${isJalali ? 'وضعیت' : 'Status'}: ${props.status}
-            ${dateLabel}: ${dateValue}
-            `.trim();
+                if (response.ok) {
+                    const booking = await response.json();
+                    this.showBookingModal(booking);
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to load booking'));
+                }
+            } catch (error) {
+                console.error('Error loading booking:', error);
+                alert('Error: Failed to load booking');
+            }
+        }
 
-            alert(details);
+        showBookingModal(booking) {
+            // Create modal HTML - same as AdminBookingManager
+            const modalHtml = `
+                <div class="hb-modal-overlay">
+                    <div class="hb-modal">
+                        <div class="hb-modal-header">
+                            <h2>Booking Details #${booking.id}</h2>
+                            <button class="hb-modal-close">&times;</button>
+                        </div>
+                        <div class="hb-modal-body">
+                            <div class="hb-booking-details">
+                                <h3 style="margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Customer Information</h3>
+                                <div class="hb-detail-row">
+                                    <strong>Customer Name:</strong>
+                                    <span>${this.escapeHtml(booking.customer_name)}</span>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Email:</strong>
+                                    <span><a href="mailto:${this.escapeHtml(booking.customer_email)}">${this.escapeHtml(booking.customer_email)}</a></span>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Phone:</strong>
+                                    <span><a href="tel:${this.escapeHtml(booking.customer_phone)}">${this.escapeHtml(booking.customer_phone)}</a></span>
+                                </div>
+
+                                <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Booking Information</h3>
+                                <div class="hb-detail-row">
+                                    <strong>Date:</strong>
+                                    <span>${this.escapeHtml(this.formatDate(booking.booking_date))}${this.isJalali ? ' <small style="color: #888;">(Jalali)</small>' : ''}</span>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Time:</strong>
+                                    <span>${this.escapeHtml(booking.booking_time)}</span>
+                                </div>
+                                ${booking.business_status ? `
+                                <div class="hb-detail-row">
+                                    <strong>Business Status:</strong>
+                                    <span>${this.escapeHtml(booking.business_status)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.target_country ? `
+                                <div class="hb-detail-row">
+                                    <strong>Target Country:</strong>
+                                    <span>${this.escapeHtml(booking.target_country)}</span>
+                                </div>
+                                ` : ''}
+
+                                ${booking.team_description || booking.idea_description || booking.service_description ? `
+                                <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Additional Details</h3>
+                                ` : ''}
+                                ${booking.team_description ? `
+                                <div class="hb-detail-row">
+                                    <strong>Team Description:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.team_description)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.idea_description ? `
+                                <div class="hb-detail-row">
+                                    <strong>Idea Description:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.idea_description)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.service_description ? `
+                                <div class="hb-detail-row">
+                                    <strong>Service Description:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.service_description)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.notes ? `
+                                <div class="hb-detail-row">
+                                    <strong>Notes:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.notes)}</span>
+                                </div>
+                                ` : ''}
+
+                                <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Status & Metadata</h3>
+                                <div class="hb-detail-row hb-status-row">
+                                    <strong>Status:</strong>
+                                    <select class="hb-status-select" data-original="${this.escapeHtml(booking.status)}">
+                                        <option value="pending" ${booking.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="confirmed" ${booking.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                        <option value="cancelled" ${booking.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                        <option value="completed" ${booking.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                    </select>
+                                </div>
+                                <div class="hb-detail-row">
+                                    <strong>Created:</strong>
+                                    <span>${this.escapeHtml(booking.created_at)}</span>
+                                </div>
+                                ${booking.updated_at && booking.updated_at !== booking.created_at ? `
+                                <div class="hb-detail-row">
+                                    <strong>Last Updated:</strong>
+                                    <span>${this.escapeHtml(booking.updated_at)}</span>
+                                </div>
+                                ` : ''}
+                                ${booking.google_event_id ? `
+                                <div class="hb-detail-row">
+                                    <strong>Google Event ID:</strong>
+                                    <span style="font-family: monospace; font-size: 11px;">${this.escapeHtml(booking.google_event_id)}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="hb-modal-footer">
+                            <button class="button button-primary hb-save-status" data-id="${booking.id}">Update Status</button>
+                            <button class="button hb-modal-close">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add modal to body
+            $('body').append(modalHtml);
+        }
+
+        closeModal() {
+            $('.hb-modal-overlay').remove();
+        }
+
+        async saveStatus(bookingId) {
+            const newStatus = $('.hb-status-select').val();
+            const originalStatus = $('.hb-status-select').data('original');
+
+            if (newStatus === originalStatus) {
+                alert('No changes to save');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${hbBookingAdmin.restUrl}/bookings/${bookingId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': hbBookingAdmin.nonce
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                });
+
+                if (response.ok) {
+                    this.closeModal();
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to update status'));
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error: Failed to update status');
+            }
+        }
+
+        escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     }
 
