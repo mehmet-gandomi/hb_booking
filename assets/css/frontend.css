@@ -76,6 +76,17 @@ textarea.hb-form-control {
     min-height: 100px;
 }
 
+/* Timezone Notice */
+.hb-timezone-notice {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+    direction: rtl;
+    text-align: right;
+}
+
 /* Form Actions */
 .hb-form-actions {
     display: flex;

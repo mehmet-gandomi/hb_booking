@@ -160,12 +160,13 @@ class BookingForm
 
                     <div class="hb-form-group">
                         <label for="hb-booking-time">
-                            ساعت مورد نظر <span class="required">*</span>
+                            ساعت مورد نظر (به وقت تهران) <span class="required">*</span>
                         </label>
                         <select id="hb-booking-time" name="booking_time" class="hb-form-control" required aria-required="true">
                             <option value="">انتخاب ساعت</option>
                             <?php echo $this->getTimeSlotOptions(); ?>
                         </select>
+                        <small class="hb-timezone-notice">⏰ تمام ساعات به وقت تهران (UTC+3:30) می‌باشد</small>
                     </div>
                 </div>
 

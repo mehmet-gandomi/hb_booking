@@ -32,14 +32,11 @@ class CalendarService
     {
         $calendar_type = get_option('hb_booking_calendar_integration', 'none');
 
-        switch ($calendar_type) {
-            case 'google':
-                return $this->addToGoogleCalendar($booking);
-            case 'ical':
-                return $this->generateICalEvent($booking);
-            default:
-                return false;
+        if ($calendar_type === 'google') {
+            return $this->addToGoogleCalendar($booking);
         }
+
+        return false;
     }
 
     /**
@@ -91,19 +88,36 @@ class CalendarService
         }
 
         $calendar_id = get_option('hb_booking_google_calendar_id', 'primary');
-        $start_datetime = strtotime("{$booking->booking_date} {$booking->booking_time}");
-        $end_datetime = strtotime("+1 hour", $start_datetime);
+
+        // Always use Asia/Tehran timezone for bookings
+        $timezone = 'Asia/Tehran';
+
+        // Create DateTime objects with Tehran timezone
+        $start_datetime = new \DateTime("{$booking->booking_date} {$booking->booking_time}", new \DateTimeZone($timezone));
+        $end_datetime = clone $start_datetime;
+        $end_datetime->modify('+1 hour');
+
+        // Build comprehensive description with all booking details
+        $description = $this->buildEventDescription($booking);
+
+        // Create event summary
+        $summary = sprintf(
+            'جلسه مشاوره: %s - %s',
+            $booking->customer_name,
+            $booking->target_country ?? 'کشور نامشخص'
+        );
 
         $event = [
-            'summary' => "Booking: " . ($booking->service ?: 'Appointment'),
-            'description' => $booking->notes ?: "Customer: {$booking->customer_name}\nPhone: {$booking->customer_phone}",
+            'summary' => $summary,
+            'description' => $description,
+            'location' => $booking->target_country ?? '',
             'start' => [
-                'dateTime' => date('c', $start_datetime),
-                'timeZone' => wp_timezone_string(),
+                'dateTime' => $start_datetime->format('c'),
+                'timeZone' => $timezone,
             ],
             'end' => [
-                'dateTime' => date('c', $end_datetime),
-                'timeZone' => wp_timezone_string(),
+                'dateTime' => $end_datetime->format('c'),
+                'timeZone' => $timezone,
             ],
             'attendees' => [
                 ['email' => $booking->customer_email, 'displayName' => $booking->customer_name],
@@ -116,6 +130,7 @@ class CalendarService
                     ['method' => 'popup', 'minutes' => 30],
                 ],
             ],
+            'colorId' => '9', // Blue color for consultation bookings
         ];
 
         $response = wp_remote_post(
@@ -155,24 +170,42 @@ class CalendarService
         }
 
         $calendar_id = get_option('hb_booking_google_calendar_id', 'primary');
-        $start_datetime = strtotime("{$booking->booking_date} {$booking->booking_time}");
-        $end_datetime = strtotime("+1 hour", $start_datetime);
+
+        // Always use Asia/Tehran timezone for bookings
+        $timezone = 'Asia/Tehran';
+
+        // Create DateTime objects with Tehran timezone
+        $start_datetime = new \DateTime("{$booking->booking_date} {$booking->booking_time}", new \DateTimeZone($timezone));
+        $end_datetime = clone $start_datetime;
+        $end_datetime->modify('+1 hour');
+
+        // Build comprehensive description with all booking details
+        $description = $this->buildEventDescription($booking);
+
+        // Create event summary
+        $summary = sprintf(
+            'جلسه مشاوره: %s - %s',
+            $booking->customer_name,
+            $booking->target_country ?? 'کشور نامشخص'
+        );
 
         $event = [
-            'summary' => "Booking: " . ($booking->service ?: 'Appointment'),
-            'description' => $booking->notes ?: "Customer: {$booking->customer_name}\nPhone: {$booking->customer_phone}",
+            'summary' => $summary,
+            'description' => $description,
+            'location' => $booking->target_country ?? '',
             'start' => [
-                'dateTime' => date('c', $start_datetime),
-                'timeZone' => wp_timezone_string(),
+                'dateTime' => $start_datetime->format('c'),
+                'timeZone' => $timezone,
             ],
             'end' => [
-                'dateTime' => date('c', $end_datetime),
-                'timeZone' => wp_timezone_string(),
+                'dateTime' => $end_datetime->format('c'),
+                'timeZone' => $timezone,
             ],
             'attendees' => [
                 ['email' => $booking->customer_email, 'displayName' => $booking->customer_name],
                 ['email' => get_option('hb_booking_admin_email', get_option('admin_email'))],
             ],
+            'colorId' => '9', // Blue color for consultation bookings
         ];
 
         $response = wp_remote_request(
@@ -216,6 +249,91 @@ class CalendarService
     }
 
     /**
+     * Build comprehensive event description with all booking details
+     */
+    private function buildEventDescription(object $booking): string
+    {
+        $description_parts = [];
+
+        // Header
+        $description_parts[] = "📋 جزئیات جلسه مشاوره";
+        $description_parts[] = str_repeat("=", 50);
+        $description_parts[] = "";
+
+        // Customer Information
+        $description_parts[] = "👤 اطلاعات شما:";
+        $description_parts[] = "نام: {$booking->customer_name}";
+        $description_parts[] = "ایمیل: {$booking->customer_email}";
+        $description_parts[] = "تلفن: {$booking->customer_phone}";
+        $description_parts[] = "";
+
+        // Business Information
+        if (!empty($booking->business_status)) {
+            $description_parts[] = "💼 وضعیت کسب و کار:";
+            $description_parts[] = $booking->business_status;
+            $description_parts[] = "";
+        }
+
+        if (!empty($booking->target_country)) {
+            $description_parts[] = "🌍 کشور مقصد:";
+            $description_parts[] = $booking->target_country;
+            $description_parts[] = "";
+        }
+
+        // Team Information
+        if (!empty($booking->team_description)) {
+            $description_parts[] = "👥 اطلاعات تیم:";
+            $description_parts[] = $booking->team_description;
+            $description_parts[] = "";
+        }
+
+        // Business Idea
+        if (!empty($booking->idea_description)) {
+            $description_parts[] = "💡 توضیح ایده:";
+            $description_parts[] = $booking->idea_description;
+            $description_parts[] = "";
+        }
+
+        // Service Requirements
+        if (!empty($booking->service_description)) {
+            $description_parts[] = "🎯 خدمات مورد نیاز:";
+            $description_parts[] = $booking->service_description;
+            $description_parts[] = "";
+        }
+
+        // Additional Notes
+        if (!empty($booking->notes)) {
+            $description_parts[] = "📝 یادداشت‌های اضافی:";
+            $description_parts[] = $booking->notes;
+            $description_parts[] = "";
+        }
+
+        // Booking Status
+        $description_parts[] = str_repeat("-", 50);
+        $description_parts[] = "وضعیت رزرو: " . $this->getStatusLabel($booking->status ?? 'pending');
+        $description_parts[] = "شماره رزرو: #{$booking->id}";
+        $description_parts[] = "";
+        $description_parts[] = "⏰ زمان جلسه به وقت تهران (UTC+3:30) است";
+
+        return implode("\n", $description_parts);
+    }
+
+    /**
+     * Get Persian label for booking status
+     */
+    private function getStatusLabel(string $status): string
+    {
+        $labels = [
+            'pending' => '⏳ در انتظار تایید',
+            'confirmed' => '✅ تایید شده',
+            'cancelled' => '❌ لغو شده',
+            'completed' => '✔️ انجام شده',
+        ];
+
+        return $labels[$status] ?? $status;
+    }
+
+    /**
      * Get access token using refresh token
      */
     private function getAccessToken(): string|false
@@ -254,23 +372,40 @@ class CalendarService
         $start_datetime = strtotime("{$booking->booking_date} {$booking->booking_time}");
         $end_datetime = strtotime("+1 hour", $start_datetime);
 
+        // Build comprehensive description
+        $description = $this->buildEventDescription($booking);
+        $escaped_description = str_replace(["\n", "\r"], ["\\n", ""], $description);
+
+        // Create summary
+        $summary = sprintf(
+            'جلسه مشاوره: %s - %s',
+            $booking->customer_name,
+            $booking->target_country ?? 'کشور نامشخص'
+        );
+
         $ical = "BEGIN:VCALENDAR\r\n";
         $ical .= "VERSION:2.0\r\n";
         $ical .= "PRODID:-//HB Booking//WordPress Plugin//EN\r\n";
+        $ical .= "CALSCALE:GREGORIAN\r\n";
+        $ical .= "METHOD:PUBLISH\r\n";
         $ical .= "BEGIN:VEVENT\r\n";
-        $ical .= "UID:" . md5($booking->id . $booking->customer_email) . "\r\n";
+        $ical .= "UID:" . md5($booking->id . $booking->customer_email . time()) . "@hb-booking\r\n";
         $ical .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
         $ical .= "DTSTART:" . gmdate('Ymd\THis\Z', $start_datetime) . "\r\n";
         $ical .= "DTEND:" . gmdate('Ymd\THis\Z', $end_datetime) . "\r\n";
-        $ical .= "SUMMARY:Booking: " . ($booking->service ?: 'Appointment') . "\r\n";
+        $ical .= "SUMMARY:" . $summary . "\r\n";
+        $ical .= "DESCRIPTION:" . $escaped_description . "\r\n";
 
-        if ($booking->notes) {
-            $ical .= "DESCRIPTION:" . str_replace("\n", "\\n", $booking->notes) . "\r\n";
+        if (!empty($booking->target_country)) {
+            $ical .= "LOCATION:" . $booking->target_country . "\r\n";
         }
 
-        $ical .= "ORGANIZER:mailto:" . get_option('admin_email') . "\r\n";
-        $ical .= "ATTENDEE:mailto:" . $booking->customer_email . "\r\n";
+        $ical .= "ORGANIZER;CN=" . get_bloginfo('name') . ":mailto:" . get_option('hb_booking_admin_email', get_option('admin_email')) . "\r\n";
+        $ical .= "ATTENDEE;CN=" . $booking->customer_name . ";RSVP=TRUE:mailto:" . $booking->customer_email . "\r\n";
         $ical .= "STATUS:CONFIRMED\r\n";
+        $ical .= "SEQUENCE:0\r\n";
+        $ical .= "PRIORITY:5\r\n";
+        $ical .= "CLASS:PUBLIC\r\n";
         $ical .= "END:VEVENT\r\n";
         $ical .= "END:VCALENDAR\r\n";
 
