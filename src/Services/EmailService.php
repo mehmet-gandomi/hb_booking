@@ -143,8 +143,11 @@ class EmailService
                         <h3><?php esc_html_e('Booking Details', 'hb-booking'); ?></h3>
                         <p><strong><?php esc_html_e('Date:', 'hb-booking'); ?></strong> <?php echo esc_html($date); ?></p>
                         <p><strong><?php esc_html_e('Time:', 'hb-booking'); ?></strong> <?php echo esc_html($time); ?></p>
-                        <?php if ($booking->service): ?>
-                            <p><strong><?php esc_html_e('Service:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->service); ?></p>
+                        <?php if ($booking->business_status): ?>
+                            <p><strong><?php esc_html_e('Business Status:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->business_status); ?></p>
+                        <?php endif; ?>
+                        <?php if ($booking->target_country): ?>
+                            <p><strong><?php esc_html_e('Target Country:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->target_country); ?></p>
                         <?php endif; ?>
                         <?php if ($booking->notes): ?>
                             <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->notes); ?></p>
@@ -213,11 +216,25 @@ class EmailService
                         <h3><?php esc_html_e('Booking Details', 'hb-booking'); ?></h3>
                         <p><strong><?php esc_html_e('Date:', 'hb-booking'); ?></strong> <?php echo esc_html($date); ?></p>
                         <p><strong><?php esc_html_e('Time:', 'hb-booking'); ?></strong> <?php echo esc_html($time); ?></p>
-                        <?php if ($booking->service): ?>
-                            <p><strong><?php esc_html_e('Service:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->service); ?></p>
+
+                        <h3><?php esc_html_e('Business Information', 'hb-booking'); ?></h3>
+                        <?php if ($booking->business_status): ?>
+                            <p><strong><?php esc_html_e('Business Status:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->business_status); ?></p>
+                        <?php endif; ?>
+                        <?php if ($booking->target_country): ?>
+                            <p><strong><?php esc_html_e('Target Country:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->target_country); ?></p>
+                        <?php endif; ?>
+                        <?php if ($booking->team_description): ?>
+                            <p><strong><?php esc_html_e('Team Description:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->team_description)); ?></p>
+                        <?php endif; ?>
+                        <?php if ($booking->idea_description): ?>
+                            <p><strong><?php esc_html_e('Idea Description:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->idea_description); ?></p>
+                        <?php endif; ?>
+                        <?php if ($booking->service_description): ?>
+                            <p><strong><?php esc_html_e('Service Requirements:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->service_description)); ?></p>
                         <?php endif; ?>
                         <?php if ($booking->notes): ?>
-                            <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->notes); ?></p>
+                            <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->notes)); ?></p>
                         <?php endif; ?>
                         <p><strong><?php esc_html_e('Booking ID:', 'hb-booking'); ?></strong> #<?php echo esc_html($booking->id); ?></p>
                     </div>
@@ -285,8 +302,11 @@ class EmailService
                         <h3><?php esc_html_e('Booking Details', 'hb-booking'); ?></h3>
                         <p><strong><?php esc_html_e('Date:', 'hb-booking'); ?></strong> <?php echo esc_html($date); ?></p>
                         <p><strong><?php esc_html_e('Time:', 'hb-booking'); ?></strong> <?php echo esc_html($time); ?></p>
-                        <?php if ($booking->service): ?>
-                            <p><strong><?php esc_html_e('Service:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->service); ?></p>
+                        <?php if ($booking->business_status): ?>
+                            <p><strong><?php esc_html_e('Business Status:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->business_status); ?></p>
+                        <?php endif; ?>
+                        <?php if ($booking->target_country): ?>
+                            <p><strong><?php esc_html_e('Target Country:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->target_country); ?></p>
                         <?php endif; ?>
                     </div>
 

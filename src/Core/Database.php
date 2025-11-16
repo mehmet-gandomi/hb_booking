@@ -35,10 +35,13 @@ class Database
 
         $sanitized = $this->sanitizeBookingData($data);
 
+        // Generate format array based on actual fields present
+        $formats = array_fill(0, count($sanitized), '%s');
+
         $result = $wpdb->insert(
             $this->table_name,
             $sanitized,
-            ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+            $formats
         );
 
         return $result ? $wpdb->insert_id : false;
@@ -193,8 +196,24 @@ class Database
             $sanitized['booking_time'] = sanitize_text_field($data['booking_time']);
         }
 
-        if (isset($data['service'])) {
-            $sanitized['service'] = sanitize_text_field($data['service']);
+        if (isset($data['business_status'])) {
+            $sanitized['business_status'] = sanitize_text_field($data['business_status']);
+        }
+
+        if (isset($data['target_country'])) {
+            $sanitized['target_country'] = sanitize_text_field($data['target_country']);
+        }
+
+        if (isset($data['team_description'])) {
+            $sanitized['team_description'] = sanitize_textarea_field($data['team_description']);
+        }
+
+        if (isset($data['idea_description'])) {
+            $sanitized['idea_description'] = sanitize_text_field($data['idea_description']);
+        }
+
+        if (isset($data['service_description'])) {
+            $sanitized['service_description'] = sanitize_textarea_field($data['service_description']);
         }
 
         if (isset($data['notes'])) {

@@ -150,7 +150,8 @@ class BookingAdmin
                         <th><?php esc_html_e('Customer', 'hb-booking'); ?></th>
                         <th><?php esc_html_e('Contact', 'hb-booking'); ?></th>
                         <th><?php esc_html_e('Date & Time', 'hb-booking'); ?></th>
-                        <th><?php esc_html_e('Service', 'hb-booking'); ?></th>
+                        <th><?php esc_html_e('Business Status', 'hb-booking'); ?></th>
+                        <th><?php esc_html_e('Target Country', 'hb-booking'); ?></th>
                         <th><?php esc_html_e('Status', 'hb-booking'); ?></th>
                         <th><?php esc_html_e('Actions', 'hb-booking'); ?></th>
                     </tr>
@@ -158,7 +159,7 @@ class BookingAdmin
                 <tbody>
                     <?php if (empty($bookings)): ?>
                         <tr>
-                            <td colspan="7" style="text-align: center;">
+                            <td colspan="8" style="text-align: center;">
                                 <?php esc_html_e('No bookings found.', 'hb-booking'); ?>
                             </td>
                         </tr>
@@ -178,15 +179,16 @@ class BookingAdmin
                                     echo esc_html(date_i18n(get_option('time_format'), strtotime($booking->booking_time)));
                                     ?>
                                 </td>
-                                <td><?php echo esc_html($booking->service ?: '-'); ?></td>
+                                <td><?php echo esc_html($booking->business_status ?: '-'); ?></td>
+                                <td><?php echo esc_html($booking->target_country ?: '-'); ?></td>
                                 <td>
                                     <span class="hb-status-badge hb-status-<?php echo esc_attr($booking->status); ?>">
                                         <?php echo esc_html(ucfirst($booking->status)); ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <button type="button" class="button button-small hb-edit-booking" data-id="<?php echo esc_attr($booking->id); ?>">
-                                        <?php esc_html_e('Edit', 'hb-booking'); ?>
+                                    <button type="button" class="button button-small hb-view-booking" data-id="<?php echo esc_attr($booking->id); ?>">
+                                        <?php esc_html_e('View', 'hb-booking'); ?>
                                     </button>
                                     <button type="button" class="button button-small hb-delete-booking" data-id="<?php echo esc_attr($booking->id); ?>">
                                         <?php esc_html_e('Delete', 'hb-booking'); ?>
@@ -216,10 +218,10 @@ class BookingAdmin
             if ($is_jalali) {
                 $jalali_date = $this->dateConverter->toJalali($booking->booking_date, 'Y/m/d');
                 $display_title = $booking->customer_name .
-                    ($booking->service ? " - {$booking->service}" : '') .
+                    ($booking->target_country ? " - {$booking->target_country}" : '') .
                     " ({$jalali_date})";
             } else {
-                $display_title = $booking->customer_name . ($booking->service ? " - {$booking->service}" : '');
+                $display_title = $booking->customer_name . ($booking->target_country ? " - {$booking->target_country}" : '');
             }
 
             $events[] = [
@@ -232,6 +234,8 @@ class BookingAdmin
                     'email' => $booking->customer_email,
                     'phone' => $booking->customer_phone,
                     'status' => $booking->status,
+                    'business_status' => $booking->business_status,
+                    'target_country' => $booking->target_country,
                     'gregorian_date' => $booking->booking_date,
                     'jalali_date' => $is_jalali ? $jalali_date : null,
                 ]

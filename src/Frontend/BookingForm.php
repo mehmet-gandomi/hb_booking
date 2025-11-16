@@ -49,7 +49,7 @@ class BookingForm
                 <div class="hb-form-row">
                     <div class="hb-form-group">
                         <label for="hb-customer-name">
-                            <?php esc_html_e('Full Name', 'hb-booking'); ?> <span class="required">*</span>
+                            نام و نام خانوادگی <span class="required">*</span>
                         </label>
                         <input
                             type="text"
@@ -63,7 +63,7 @@ class BookingForm
 
                     <div class="hb-form-group">
                         <label for="hb-customer-email">
-                            <?php esc_html_e('Email Address', 'hb-booking'); ?> <span class="required">*</span>
+                            آدرس ایمیل <span class="required">*</span>
                         </label>
                         <input
                             type="email"
@@ -79,7 +79,7 @@ class BookingForm
                 <div class="hb-form-row">
                     <div class="hb-form-group">
                         <label for="hb-customer-phone">
-                            <?php esc_html_e('Phone Number', 'hb-booking'); ?> <span class="required">*</span>
+                            <?php esc_html_e('شماره تماس', 'hb-booking'); ?> <span class="required">*</span>
                         </label>
                         <input
                             type="tel"
@@ -90,24 +90,49 @@ class BookingForm
                             aria-required="true"
                         />
                     </div>
+                </div>
 
-                    <?php if ($atts['show_service']): ?>
+                <div class="hb-form-row">
                     <div class="hb-form-group">
-                        <label for="hb-service">
-                            <?php esc_html_e('Service', 'hb-booking'); ?>
+                        <label for="hb-business-status">
+                            وضعیت فعلی کسب و کار <span class="required">*</span>
                         </label>
-                        <select id="hb-service" name="service" class="hb-form-control">
-                            <option value=""><?php esc_html_e('Select a service', 'hb-booking'); ?></option>
-                            <?php echo $this->getServiceOptions(); ?>
+                        <select id="hb-business-status" name="business_status" class="hb-form-control" required aria-required="true">
+                            <option value="">انتخاب کنید</option>
+                            <option value="ایده اولیه">ایده اولیه</option>
+                            <option value="استارتاپ در مرحله MVP">استارتاپ در مرحله MVP</option>
+                            <option value="در حال جذب سرمایه">در حال جذب سرمایه</option>
+                            <option value="در حال فعالیت بین‌المللی">در حال فعالیت بین‌المللی</option>
+                            <option value="سایر">سایر</option>
                         </select>
                     </div>
-                    <?php endif; ?>
+
+                    <div class="hb-form-group">
+                        <label for="hb-target-country">
+                            کشور مقصد مورد نظر <span class="required">*</span>
+                        </label>
+                        <select id="hb-target-country" name="target_country" class="hb-form-control" required aria-required="true">
+                            <option value="">انتخاب کنید</option>
+                            <option value="اسپانیا">اسپانیا</option>
+                            <option value="کانادا">کانادا</option>
+                            <option value="انگلستان">انگلستان</option>
+                            <option value="لتونی">لتونی</option>
+                            <option value="لیتوانی">لیتوانی</option>
+                            <option value="استونی">استونی</option>
+                            <option value="پرتغال">پرتغال</option>
+                            <option value="هلند">هلند</option>
+                            <option value="فنلاند">فنلاند</option>
+                            <option value="فرانسه">فرانسه</option>
+                            <option value="ترکیه">ترکیه</option>
+                            <option value="امارات">امارات</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="hb-form-row">
                     <div class="hb-form-group">
                         <label for="hb-booking-date">
-                            <?php esc_html_e('Preferred Date', 'hb-booking'); ?> <span class="required">*</span>
+                            تاریخ مورد نظر <span class="required">*</span>
                         </label>
                         <?php if ($this->date_converter->isJalali()): ?>
                             <input
@@ -135,25 +160,71 @@ class BookingForm
 
                     <div class="hb-form-group">
                         <label for="hb-booking-time">
-                            <?php esc_html_e('Preferred Time', 'hb-booking'); ?> <span class="required">*</span>
+                            ساعت مورد نظر <span class="required">*</span>
                         </label>
                         <select id="hb-booking-time" name="booking_time" class="hb-form-control" required aria-required="true">
-                            <option value=""><?php esc_html_e('Select a time', 'hb-booking'); ?></option>
+                            <option value="">انتخاب ساعت</option>
                             <?php echo $this->getTimeSlotOptions(); ?>
                         </select>
                     </div>
                 </div>
 
                 <div class="hb-form-group">
+                    <label for="hb-team-description">
+                        تیم شما از چند نفر تشکیل شده و نقش‌های کلیدی چیستند؟ <span class="required">*</span>
+                    </label>
+                    <textarea
+                        id="hb-team-description"
+                        name="team_description"
+                        class="hb-form-control"
+                        rows="4"
+                        required
+                        aria-required="true"
+                        placeholder="توضیح دهید..."
+                    ></textarea>
+                </div>
+
+                <div class="hb-form-group">
+                    <label for="hb-idea-description">
+                        توضیح کوتاه ایده (در حد یک خط) <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="hb-idea-description"
+                        name="idea_description"
+                        class="hb-form-control"
+                        required
+                        aria-required="true"
+                        maxlength="500"
+                        placeholder="توضیح کوتاه..."
+                    />
+                </div>
+
+                <div class="hb-form-group">
+                    <label for="hb-service-description">
+                        چه خدماتی نیاز دارید؟ (توضیح کوتاه) <span class="required">*</span>
+                    </label>
+                    <textarea
+                        id="hb-service-description"
+                        name="service_description"
+                        class="hb-form-control"
+                        rows="4"
+                        required
+                        aria-required="true"
+                        placeholder="توضیح دهید..."
+                    ></textarea>
+                </div>
+
+                <div class="hb-form-group">
                     <label for="hb-notes">
-                        <?php esc_html_e('Additional Notes', 'hb-booking'); ?>
+                        یادداشت‌های اضافی
                     </label>
                     <textarea
                         id="hb-notes"
                         name="notes"
                         class="hb-form-control"
                         rows="4"
-                        placeholder="<?php esc_attr_e('Any special requests or information...', 'hb-booking'); ?>"
+                        placeholder="هرگونه درخواست یا اطلاعات خاص..."
                     ></textarea>
                 </div>
 
