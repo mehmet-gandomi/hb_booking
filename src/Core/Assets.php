@@ -34,10 +34,26 @@ class Assets
      */
     public function enqueueFrontendAssets(): void
     {
+        // Enqueue Select2 for better multi-select experience
+        wp_enqueue_style(
+            'select2',
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+            [],
+            '4.1.0'
+        );
+
+        wp_enqueue_script(
+            'select2',
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+            ['jquery'],
+            '4.1.0',
+            true
+        );
+
         wp_enqueue_style(
             'hb-booking-frontend',
             HB_BOOKING_PLUGIN_URL . 'assets/css/frontend.css',
-            [],
+            ['select2'],
             HB_BOOKING_VERSION
         );
 
@@ -80,9 +96,9 @@ class Assets
         }
 
         // Set proper dependencies for frontend.js
-        $frontend_deps = ['jquery'];
+        $frontend_deps = ['jquery', 'select2'];
         if ($this->date_converter->isJalali()) {
-            $frontend_deps = ['jquery', 'moment', 'persian-date', 'persian-datepicker'];
+            $frontend_deps = ['jquery', 'select2', 'moment', 'persian-date', 'persian-datepicker'];
         }
 
         wp_enqueue_script(

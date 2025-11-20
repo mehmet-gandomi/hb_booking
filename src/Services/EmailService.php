@@ -224,14 +224,11 @@ class EmailService
                         <?php if ($booking->target_country): ?>
                             <p><strong><?php esc_html_e('Target Country:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->target_country); ?></p>
                         <?php endif; ?>
-                        <?php if ($booking->team_description): ?>
-                            <p><strong><?php esc_html_e('Team Description:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->team_description)); ?></p>
+                        <?php if ($booking->team_size): ?>
+                            <p><strong><?php esc_html_e('Team Size:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->team_size); ?> <?php echo $booking->team_size == 1 ? esc_html__('person', 'hb-booking') : esc_html__('people', 'hb-booking'); ?></p>
                         <?php endif; ?>
-                        <?php if ($booking->idea_description): ?>
-                            <p><strong><?php esc_html_e('Idea Description:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->idea_description); ?></p>
-                        <?php endif; ?>
-                        <?php if ($booking->service_description): ?>
-                            <p><strong><?php esc_html_e('Service Requirements:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->service_description)); ?></p>
+                        <?php if ($booking->services): ?>
+                            <p><strong><?php esc_html_e('Services:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->services)); ?></p>
                         <?php endif; ?>
                         <?php if ($booking->notes): ?>
                             <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->notes)); ?></p>

@@ -204,16 +204,17 @@ class Database
             $sanitized['target_country'] = sanitize_text_field($data['target_country']);
         }
 
-        if (isset($data['team_description'])) {
-            $sanitized['team_description'] = sanitize_textarea_field($data['team_description']);
+        if (isset($data['team_size'])) {
+            $sanitized['team_size'] = absint($data['team_size']);
         }
 
-        if (isset($data['idea_description'])) {
-            $sanitized['idea_description'] = sanitize_text_field($data['idea_description']);
-        }
-
-        if (isset($data['service_description'])) {
-            $sanitized['service_description'] = sanitize_textarea_field($data['service_description']);
+        if (isset($data['services'])) {
+            // Handle array or string (for multi-select)
+            if (is_array($data['services'])) {
+                $sanitized['services'] = sanitize_textarea_field(implode(', ', array_map('sanitize_text_field', $data['services'])));
+            } else {
+                $sanitized['services'] = sanitize_textarea_field($data['services']);
+            }
         }
 
         if (isset($data['notes'])) {

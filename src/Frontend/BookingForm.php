@@ -171,49 +171,36 @@ class BookingForm
                 </div>
 
                 <div class="hb-form-group">
-                    <label for="hb-team-description">
-                        تیم شما از چند نفر تشکیل شده و نقش‌های کلیدی چیستند؟ <span class="required">*</span>
+                    <label for="hb-team-size">
+                        تیم شما از چند نفر تشکیل شده؟ <span class="required">*</span>
                     </label>
-                    <textarea
-                        id="hb-team-description"
-                        name="team_description"
-                        class="hb-form-control"
-                        rows="4"
-                        required
-                        aria-required="true"
-                        placeholder="توضیح دهید..."
-                    ></textarea>
+                    <select id="hb-team-size" name="team_size" class="hb-form-control" required aria-required="true">
+                        <option value="">انتخاب کنید</option>
+                        <option value="1">۱ نفر (فقط خودم)</option>
+                        <option value="2">۲ نفر</option>
+                        <option value="3">۳ نفر</option>
+                        <option value="4">۴ نفر</option>
+                        <option value="5">۵ نفر</option>
+                        <option value="6">۶-۱۰ نفر</option>
+                        <option value="11">بیش از ۱۰ نفر</option>
+                    </select>
                 </div>
 
                 <div class="hb-form-group">
-                    <label for="hb-idea-description">
-                        توضیح کوتاه ایده (در حد یک خط) <span class="required">*</span>
+                    <label for="hb-services">
+                        چه خدماتی نیاز دارید؟ <span class="required">*</span>
                     </label>
-                    <input
-                        type="text"
-                        id="hb-idea-description"
-                        name="idea_description"
-                        class="hb-form-control"
-                        required
-                        aria-required="true"
-                        maxlength="500"
-                        placeholder="توضیح کوتاه..."
-                    />
-                </div>
-
-                <div class="hb-form-group">
-                    <label for="hb-service-description">
-                        چه خدماتی نیاز دارید؟ (توضیح کوتاه) <span class="required">*</span>
-                    </label>
-                    <textarea
-                        id="hb-service-description"
-                        name="service_description"
-                        class="hb-form-control"
-                        rows="4"
-                        required
-                        aria-required="true"
-                        placeholder="توضیح دهید..."
-                    ></textarea>
+                    <select id="hb-services" name="services[]" class="hb-form-control" multiple required aria-required="true">
+                        <option value="تهیه اسناد بیزنس">تهیه اسناد بیزنس</option>
+                        <option value="جذب سرمایه">جذب سرمایه</option>
+                        <option value="خدمات رلوکیشن">خدمات رلوکیشن</option>
+                        <option value="مشاوره ایده و کسب‌وکار">مشاوره ایده و کسب‌وکار</option>
+                        <option value="ساخت MVP (محصول اولیه)">ساخت MVP (محصول اولیه)</option>
+                        <option value="اپلیکیشن ویزا">اپلیکیشن ویزا</option>
+                        <option value="خدمات جامع ویزای استارتاپ">خدمات جامع ویزای استارتاپ</option>
+                        <option value="بازسازی و نگهداری استارتاپ">بازسازی و نگهداری استارتاپ</option>
+                    </select>
+                    <small class="hb-field-help">می‌توانید چند خدمت را همزمان انتخاب کنید</small>
                 </div>
 
                 <div class="hb-form-group">

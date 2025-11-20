@@ -203,25 +203,19 @@
                                 </div>
                                 ` : ''}
 
-                                ${booking.team_description || booking.idea_description || booking.service_description ? `
+                                ${booking.team_size || booking.services ? `
                                 <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Additional Details</h3>
                                 ` : ''}
-                                ${booking.team_description ? `
+                                ${booking.team_size ? `
                                 <div class="hb-detail-row">
-                                    <strong>Team Description:</strong>
-                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.team_description)}</span>
+                                    <strong>Team Size:</strong>
+                                    <span>${this.escapeHtml(booking.team_size.toString())} ${booking.team_size == 1 ? 'person' : 'people'}</span>
                                 </div>
                                 ` : ''}
-                                ${booking.idea_description ? `
+                                ${booking.services ? `
                                 <div class="hb-detail-row">
-                                    <strong>Idea Description:</strong>
-                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.idea_description)}</span>
-                                </div>
-                                ` : ''}
-                                ${booking.service_description ? `
-                                <div class="hb-detail-row">
-                                    <strong>Service Description:</strong>
-                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.service_description)}</span>
+                                    <strong>Services:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.services)}</span>
                                 </div>
                                 ` : ''}
                                 ${booking.notes ? `
@@ -573,25 +567,19 @@
                                 </div>
                                 ` : ''}
 
-                                ${booking.team_description || booking.idea_description || booking.service_description ? `
+                                ${booking.team_size || booking.services ? `
                                 <h3 style="margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #2271b1; color: #2271b1;">Additional Details</h3>
                                 ` : ''}
-                                ${booking.team_description ? `
+                                ${booking.team_size ? `
                                 <div class="hb-detail-row">
-                                    <strong>Team Description:</strong>
-                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.team_description)}</span>
+                                    <strong>Team Size:</strong>
+                                    <span>${this.escapeHtml(booking.team_size.toString())} ${booking.team_size == 1 ? 'person' : 'people'}</span>
                                 </div>
                                 ` : ''}
-                                ${booking.idea_description ? `
+                                ${booking.services ? `
                                 <div class="hb-detail-row">
-                                    <strong>Idea Description:</strong>
-                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.idea_description)}</span>
-                                </div>
-                                ` : ''}
-                                ${booking.service_description ? `
-                                <div class="hb-detail-row">
-                                    <strong>Service Description:</strong>
-                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.service_description)}</span>
+                                    <strong>Services:</strong>
+                                    <span style="white-space: pre-wrap;">${this.escapeHtml(booking.services)}</span>
                                 </div>
                                 ` : ''}
                                 ${booking.notes ? `

@@ -67,7 +67,16 @@
 
             formArray.forEach(field => {
                 if (field.name !== 'hb_booking_nonce' && field.name !== '_wp_http_referer') {
-                    data[field.name] = field.value;
+                    // Handle multi-select arrays (services[])
+                    if (field.name.endsWith('[]')) {
+                        const fieldName = field.name.slice(0, -2); // Remove '[]'
+                        if (!data[fieldName]) {
+                            data[fieldName] = [];
+                        }
+                        data[fieldName].push(field.value);
+                    } else {
+                        data[field.name] = field.value;
+                    }
                 }
             });
 
@@ -207,11 +216,37 @@
     }
 
     /**
+     * Initialize Select2 for services multi-select
+     */
+    function initSelect2() {
+        if (typeof $.fn.select2 !== 'undefined') {
+            $('#hb-services').select2({
+                placeholder: 'انتخاب خدمات مورد نیاز',
+                allowClear: false,
+                dir: 'rtl',
+                width: '100%',
+                language: {
+                    noResults: function() {
+                        return 'نتیجه‌ای یافت نشد';
+                    },
+                    searching: function() {
+                        return 'در حال جستجو...';
+                    }
+                },
+                minimumResultsForSearch: -1 // Hide search box since we only have 8 options
+            });
+        }
+    }
+
+    /**
      * Initialize on DOM ready
      */
     $(document).ready(function() {
         // Initialize Persian datepicker if needed
         initPersianDatepicker();
+
+        // Initialize Select2 for services field
+        initSelect2();
 
         // Initialize all booking forms
         $('.hb-booking-form').each(function() {

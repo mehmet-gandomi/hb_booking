@@ -168,9 +168,8 @@ class BookingApi extends WP_REST_Controller
             'booking_time' => $params['booking_time'],
             'business_status' => $params['business_status'] ?? '',
             'target_country' => $params['target_country'] ?? '',
-            'team_description' => $params['team_description'] ?? '',
-            'idea_description' => $params['idea_description'] ?? '',
-            'service_description' => $params['service_description'] ?? '',
+            'team_size' => $params['team_size'] ?? 0,
+            'services' => $params['services'] ?? '',
             'notes' => $params['notes'] ?? '',
             'status' => 'pending',
         ];
@@ -227,9 +226,8 @@ class BookingApi extends WP_REST_Controller
             'booking_time' => $params['booking_time'] ?? null,
             'business_status' => $params['business_status'] ?? null,
             'target_country' => $params['target_country'] ?? null,
-            'team_description' => $params['team_description'] ?? null,
-            'idea_description' => $params['idea_description'] ?? null,
-            'service_description' => $params['service_description'] ?? null,
+            'team_size' => $params['team_size'] ?? null,
+            'services' => $params['services'] ?? null,
             'notes' => $params['notes'] ?? null,
             'status' => $params['status'] ?? null,
         ], fn($value) => $value !== null);
@@ -332,16 +330,12 @@ class BookingApi extends WP_REST_Controller
             return new WP_Error('invalid_data', __('Target country is required', 'hb-booking'), ['status' => 400]);
         }
 
-        if (empty($data['team_description'])) {
-            return new WP_Error('invalid_data', __('Team description is required', 'hb-booking'), ['status' => 400]);
+        if (empty($data['team_size'])) {
+            return new WP_Error('invalid_data', __('Team size is required', 'hb-booking'), ['status' => 400]);
         }
 
-        if (empty($data['idea_description'])) {
-            return new WP_Error('invalid_data', __('Idea description is required', 'hb-booking'), ['status' => 400]);
-        }
-
-        if (empty($data['service_description'])) {
-            return new WP_Error('invalid_data', __('Service description is required', 'hb-booking'), ['status' => 400]);
+        if (empty($data['services'])) {
+            return new WP_Error('invalid_data', __('Services are required', 'hb-booking'), ['status' => 400]);
         }
 
         return true;
@@ -412,20 +406,14 @@ class BookingApi extends WP_REST_Controller
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
             ],
-            'team_description' => [
+            'team_size' => [
                 'required' => true,
-                'type' => 'string',
-                'sanitize_callback' => 'sanitize_textarea_field',
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
             ],
-            'idea_description' => [
+            'services' => [
                 'required' => true,
-                'type' => 'string',
-                'sanitize_callback' => 'sanitize_text_field',
-            ],
-            'service_description' => [
-                'required' => true,
-                'type' => 'string',
-                'sanitize_callback' => 'sanitize_textarea_field',
+                'type' => ['string', 'array'],
             ],
             'notes' => [
                 'type' => 'string',

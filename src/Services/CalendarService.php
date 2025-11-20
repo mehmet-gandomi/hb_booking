@@ -280,24 +280,18 @@ class CalendarService
             $description_parts[] = "";
         }
 
-        // Team Information
-        if (!empty($booking->team_description)) {
-            $description_parts[] = "👥 اطلاعات تیم:";
-            $description_parts[] = $booking->team_description;
+        // Team Size
+        if (!empty($booking->team_size)) {
+            $description_parts[] = "👥 تعداد اعضای تیم:";
+            $team_label = $booking->team_size == 1 ? "یک نفر (فقط خودم)" : "{$booking->team_size} نفر";
+            $description_parts[] = $team_label;
             $description_parts[] = "";
         }
 
-        // Business Idea
-        if (!empty($booking->idea_description)) {
-            $description_parts[] = "💡 توضیح ایده:";
-            $description_parts[] = $booking->idea_description;
-            $description_parts[] = "";
-        }
-
-        // Service Requirements
-        if (!empty($booking->service_description)) {
+        // Services
+        if (!empty($booking->services)) {
             $description_parts[] = "🎯 خدمات مورد نیاز:";
-            $description_parts[] = $booking->service_description;
+            $description_parts[] = $booking->services;
             $description_parts[] = "";
         }
 
