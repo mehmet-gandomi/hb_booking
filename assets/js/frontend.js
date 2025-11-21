@@ -131,13 +131,19 @@
 
                 // Disable booked time slots
                 bookedTimes.forEach(time => {
-                    this.timeField.find(`option[value="${time}"]`).prop('disabled', true);
+                    // Convert "17:00:00" to "17:00" to match form option values
+                    const timeWithoutSeconds = time.substring(0, 5);
+                    console.log(timeWithoutSeconds)
+                    this.timeField.find(`option[value="${timeWithoutSeconds}"]`).prop('disabled', true);
                 });
 
                 // Reset the time field selection if currently selected time is booked
                 const currentTime = this.timeField.val();
-                if (currentTime && bookedTimes.includes(currentTime)) {
-                    this.timeField.val('');
+                if (currentTime) {
+                    const bookedTimesWithoutSeconds = bookedTimes.map(t => t.substring(0, 5));
+                    if (bookedTimesWithoutSeconds.includes(currentTime)) {
+                        this.timeField.val('');
+                    }
                 }
 
                 // Refresh the select field display

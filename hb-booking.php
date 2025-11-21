@@ -3,7 +3,7 @@
  * Plugin Name: HB Booking
  * Plugin URI: https://hadesboard.com/hb-booking
  * Description: A modern booking system with calendar integration for WordPress
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Mohamad Gandomi
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('HB_BOOKING_VERSION', '1.0.0');
+define('HB_BOOKING_VERSION', '1.0.1');
 define('HB_BOOKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('HB_BOOKING_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('HB_BOOKING_PLUGIN_FILE', __FILE__);

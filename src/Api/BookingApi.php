@@ -298,7 +298,10 @@ class BookingApi extends WP_REST_Controller
         $date = $request->get_param('date');
         $time = $request->get_param('time');
 
-        $available = $this->database->isTimeSlotAvailable($date, $time);
+        // Convert date to Gregorian for database query
+        $gregorian_date = $this->dateConverter->prepareForDatabase($date);
+
+        $available = $this->database->isTimeSlotAvailable($gregorian_date, $time);
 
         return new WP_REST_Response([
             'available' => $available,
