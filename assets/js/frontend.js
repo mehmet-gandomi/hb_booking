@@ -193,16 +193,6 @@
                 .addClass(type + ' show')
                 .html(`<p>${message}</p>`)
                 .attr('role', 'alert');
-
-            // Scroll to message
-            $('html, body').animate({
-                scrollTop: this.messages.offset().top - 100
-            }, 500);
-
-            // Auto-hide success messages
-            if (type === 'success') {
-                setTimeout(() => this.hideMessage(), 5000);
-            }
         }
 
         hideMessage() {
