@@ -79,14 +79,13 @@ class BookingForm
                 <div class="hb-form-row">
                     <div class="hb-form-group">
                         <label for="hb-customer-phone">
-                            <?php esc_html_e('شماره تماس', 'hb-booking'); ?> <span class="required">*</span>
+                            <?php esc_html_e('شماره تماس', 'hb-booking'); ?>
                         </label>
                         <input
                             type="tel"
                             id="hb-customer-phone"
                             name="customer_phone"
                             class="hb-form-control"
-                            required
                             aria-required="true"
                         />
                     </div>
@@ -103,6 +102,7 @@ class BookingForm
                             <option value="استارتاپ در مرحله MVP">استارتاپ در مرحله MVP</option>
                             <option value="در حال جذب سرمایه">در حال جذب سرمایه</option>
                             <option value="در حال فعالیت بین‌المللی">در حال فعالیت بین‌المللی</option>
+							<option value="کسب و کار ندارم">کسب و کار ندارم</option>
                             <option value="سایر">سایر</option>
                         </select>
                     </div>
@@ -125,6 +125,8 @@ class BookingForm
                             <option value="فرانسه">فرانسه</option>
                             <option value="ترکیه">ترکیه</option>
                             <option value="امارات">امارات</option>
+							<option value="سایر">سایر</option>
+							<option value="مایل به انتخاب بهترین گزینه در جلسه مشاوره هستم">مایل به انتخاب بهترین گزینه در جلسه مشاوره هستم</option>
                         </select>
                     </div>
                 </div>
@@ -181,8 +183,7 @@ class BookingForm
                         <option value="3">۳ نفر</option>
                         <option value="4">۴ نفر</option>
                         <option value="5">۵ نفر</option>
-                        <option value="6">۶-۱۰ نفر</option>
-                        <option value="11">بیش از ۱۰ نفر</option>
+                        <option value="6">بیش از ۵ نفر</option>
                     </select>
                 </div>
 
@@ -199,6 +200,7 @@ class BookingForm
                         <option value="اپلیکیشن ویزا">اپلیکیشن ویزا</option>
                         <option value="خدمات جامع ویزای استارتاپ">خدمات جامع ویزای استارتاپ</option>
                         <option value="بازسازی و نگهداری استارتاپ">بازسازی و نگهداری استارتاپ</option>
+						<option value="سایر">سایر</option>
                     </select>
                     <small class="hb-field-help">می‌توانید چند خدمت را همزمان انتخاب کنید</small>
                 </div>
