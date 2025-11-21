@@ -86,7 +86,6 @@ class BookingForm
                             id="hb-customer-phone"
                             name="customer_phone"
                             class="hb-form-control"
-                            aria-required="true"
                         />
                     </div>
                 </div>
@@ -223,9 +222,9 @@ class BookingForm
                         <?php esc_html_e('Submit Booking', 'hb-booking'); ?>
                     </button>
                 </div>
-
-                <div class="hb-form-messages" role="alert" aria-live="polite"></div>
             </form>
+
+            <div class="hb-form-messages" role="alert" aria-live="polite"></div>
         </div>
         <?php
         return ob_get_clean();

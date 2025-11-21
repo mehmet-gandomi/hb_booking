@@ -170,6 +170,25 @@ class Database
     }
 
     /**
+     * Get booked time slots for a specific date
+     */
+    public function getBookedTimesForDate(string $date): array
+    {
+        global $wpdb;
+
+        $query = $wpdb->prepare(
+            "SELECT DISTINCT booking_time FROM {$this->table_name}
+             WHERE booking_date = %s AND status != 'cancelled'
+             ORDER BY booking_time ASC",
+            $date
+        );
+
+        $results = $wpdb->get_col($query);
+
+        return $results ?: [];
+    }
+
+    /**
      * Sanitize booking data
      */
     private function sanitizeBookingData(array $data): array
@@ -184,7 +203,7 @@ class Database
             $sanitized['customer_email'] = sanitize_email($data['customer_email']);
         }
 
-        if (isset($data['customer_phone'])) {
+        if (isset($data['customer_phone']) && !empty($data['customer_phone'])) {
             $sanitized['customer_phone'] = sanitize_text_field($data['customer_phone']);
         }
 

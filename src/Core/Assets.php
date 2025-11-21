@@ -117,7 +117,7 @@ class Assets
             'i18n' => [
                 'pleaseWait' => __('Please wait...', 'hb-booking'),
                 'error' => __('An error occurred', 'hb-booking'),
-                'success' => __('Booking submitted successfully!', 'hb-booking'),
+                'success' => __('جلسه شما با موفقیت رزرو شد لطفا ایمیل و گوگل کلندر خود را چک کنید', 'hb-booking'),
             ]
         ]);
     }

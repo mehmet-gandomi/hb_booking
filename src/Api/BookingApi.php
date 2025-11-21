@@ -102,6 +102,19 @@ class BookingApi extends WP_REST_Controller
                 ],
             ],
         ]);
+
+        register_rest_route($this->namespace, '/booked-times', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'getBookedTimes'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'date' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'format' => 'date',
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -293,6 +306,23 @@ class BookingApi extends WP_REST_Controller
     }
 
     /**
+     * Get booked times for a specific date
+     */
+    public function getBookedTimes(WP_REST_Request $request): WP_REST_Response
+    {
+        $date = $request->get_param('date');
+
+        // Convert date to Gregorian for database query
+        $gregorian_date = $this->dateConverter->prepareForDatabase($date);
+
+        $booked_times = $this->database->getBookedTimesForDate($gregorian_date);
+
+        return new WP_REST_Response([
+            'booked_times' => $booked_times,
+        ], 200);
+    }
+
+    /**
      * Validate booking data
      */
     private function validateBookingData(array $data): bool|WP_Error
@@ -303,10 +333,6 @@ class BookingApi extends WP_REST_Controller
 
         if (empty($data['customer_email']) || !is_email($data['customer_email'])) {
             return new WP_Error('invalid_data', __('Valid email address is required', 'hb-booking'), ['status' => 400]);
-        }
-
-        if (empty($data['customer_phone'])) {
-            return new WP_Error('invalid_data', __('Phone number is required', 'hb-booking'), ['status' => 400]);
         }
 
         if (empty($data['booking_date'])) {
@@ -382,7 +408,7 @@ class BookingApi extends WP_REST_Controller
                 'sanitize_callback' => 'sanitize_email',
             ],
             'customer_phone' => [
-                'required' => true,
+                'required' => false,
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
             ],

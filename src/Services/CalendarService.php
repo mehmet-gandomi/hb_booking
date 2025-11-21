@@ -133,8 +133,9 @@ class CalendarService
             'colorId' => '9', // Blue color for consultation bookings
         ];
 
+        // Add sendUpdates parameter to prevent Google from sending invitation emails
         $response = wp_remote_post(
-            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events",
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events?sendUpdates=none",
             [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $access_token,
@@ -208,8 +209,9 @@ class CalendarService
             'colorId' => '9', // Blue color for consultation bookings
         ];
 
+        // Add sendUpdates parameter to prevent Google from sending update notification emails
         $response = wp_remote_request(
-            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}",
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}?sendUpdates=none",
             [
                 'method' => 'PUT',
                 'headers' => [

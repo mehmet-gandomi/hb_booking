@@ -130,9 +130,13 @@ textarea.hb-form-control {
 /* Form Messages */
 .hb-form-messages {
     margin-top: 1rem;
-    padding: 1rem;
+    padding: 1.25rem;
     border-radius: 4px;
     display: none;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    direction: rtl;
+    text-align: center;
 }
 
 .hb-form-messages.show {
@@ -149,6 +153,11 @@ textarea.hb-form-control {
     background: #f8d7da;
     border: 1px solid #f5c6cb;
     color: #721c24;
+}
+
+.hb-form-messages p {
+    margin: 0;
+    font-weight: 600;
 }
 
 /* Customer Calendar */

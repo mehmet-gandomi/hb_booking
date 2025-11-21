@@ -12,15 +12,19 @@
     class BookingForm {
         constructor(formElement) {
             this.form = $(formElement);
-            this.messages = this.form.find('.hb-form-messages');
+            this.wrapper = this.form.closest('.hb-booking-form-wrapper');
+            this.messages = this.wrapper.find('.hb-form-messages');
             this.submitButton = this.form.find('button[type="submit"]');
+            this.dateField = this.form.find('#hb-booking-date');
+            this.timeField = this.form.find('#hb-booking-time');
 
             this.init();
         }
 
         init() {
             this.form.on('submit', (e) => this.handleSubmit(e));
-            this.form.find('#hb-booking-date, #hb-booking-time').on('change', () => this.checkAvailability());
+            this.dateField.on('change', () => this.updateAvailableTimes());
+            this.timeField.on('change', () => this.checkAvailability());
         }
 
         async handleSubmit(e) {
@@ -41,6 +45,8 @@
                 if (response.success) {
                     this.showMessage('success', response.message || hbBooking.i18n.success);
                     this.form[0].reset();
+                    // Hide the form after successful submission
+                    this.form.slideUp(300);
                 } else {
                     throw new Error(response.message || hbBooking.i18n.error);
                 }
@@ -101,9 +107,50 @@
             return await response.json();
         }
 
+        async updateAvailableTimes() {
+            const date = this.dateField.val();
+
+            if (!date) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${hbBooking.restUrl}/booked-times?date=${encodeURIComponent(date)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const bookedTimes = data.booked_times || [];
+
+                // Enable all time options first
+                this.timeField.find('option').prop('disabled', false);
+
+                // Disable booked time slots
+                bookedTimes.forEach(time => {
+                    this.timeField.find(`option[value="${time}"]`).prop('disabled', true);
+                });
+
+                // Reset the time field selection if currently selected time is booked
+                const currentTime = this.timeField.val();
+                if (currentTime && bookedTimes.includes(currentTime)) {
+                    this.timeField.val('');
+                }
+
+                // Refresh the select field display
+                this.timeField.trigger('change');
+
+            } catch (error) {
+                // Silently handle errors
+            }
+        }
+
         async checkAvailability() {
-            const date = this.form.find('#hb-booking-date').val();
-            const time = this.form.find('#hb-booking-time').val();
+            const date = this.dateField.val();
+            const time = this.timeField.val();
 
             if (!date || !time) {
                 return;
