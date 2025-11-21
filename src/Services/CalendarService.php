@@ -130,12 +130,19 @@ class CalendarService
                     ['method' => 'popup', 'minutes' => 30],
                 ],
             ],
+            'conferenceData' => [
+                'createRequest' => [
+                    'requestId' => 'hb-booking-' . $booking->id . '-' . time(),
+                    'conferenceSolutionKey' => ['type' => 'hangoutsMeet'],
+                ],
+            ],
             'colorId' => '9', // Blue color for consultation bookings
         ];
 
+        // Add conferenceDataVersion=1 to enable Google Meet link creation
         // Add sendUpdates parameter to prevent Google from sending invitation emails
         $response = wp_remote_post(
-            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events?sendUpdates=none",
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events?conferenceDataVersion=1&sendUpdates=none",
             [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $access_token,
@@ -206,12 +213,19 @@ class CalendarService
                 ['email' => $booking->customer_email, 'displayName' => $booking->customer_name],
                 ['email' => get_option('hb_booking_admin_email', get_option('admin_email'))],
             ],
+            'conferenceData' => [
+                'createRequest' => [
+                    'requestId' => 'hb-booking-' . $booking->id . '-' . time(),
+                    'conferenceSolutionKey' => ['type' => 'hangoutsMeet'],
+                ],
+            ],
             'colorId' => '9', // Blue color for consultation bookings
         ];
 
+        // Add conferenceDataVersion=1 to enable Google Meet link creation
         // Add sendUpdates parameter to prevent Google from sending update notification emails
         $response = wp_remote_request(
-            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}?sendUpdates=none",
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}?conferenceDataVersion=1&sendUpdates=none",
             [
                 'method' => 'PUT',
                 'headers' => [
