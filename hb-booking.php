@@ -75,6 +75,9 @@ final class Plugin
         $installer = new Core\Installer();
         $installer->install();
 
+        // Schedule reminder cron job
+        Services\ReminderService::scheduleCron();
+
         flush_rewrite_rules();
     }
 
@@ -83,6 +86,9 @@ final class Plugin
      */
     public function deactivate(): void
     {
+        // Unschedule reminder cron job
+        Services\ReminderService::unscheduleCron();
+
         flush_rewrite_rules();
     }
 
@@ -110,6 +116,7 @@ final class Plugin
         // Initialize services
         Services\EmailService::getInstance();
         Services\CalendarService::getInstance();
+        Services\ReminderService::getInstance();
     }
 
     /**

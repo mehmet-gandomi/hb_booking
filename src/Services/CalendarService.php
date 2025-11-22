@@ -320,7 +320,7 @@ class CalendarService
 
         // Booking Status
         $description_parts[] = str_repeat("-", 50);
-        $description_parts[] = "وضعیت رزرو: " . $this->getStatusLabel($booking->status ?? 'pending');
+        //$description_parts[] = "وضعیت رزرو: " . $this->getStatusLabel($booking->status ?? 'pending');
         $description_parts[] = "شماره رزرو: #{$booking->id}";
         $description_parts[] = "";
         $description_parts[] = "⏰ زمان جلسه به وقت تهران (UTC+3:30) است";
@@ -450,5 +450,59 @@ class CalendarService
     {
         $upload_dir = wp_upload_dir();
         return $upload_dir['baseurl'] . "/hb-booking-icals/booking-{$booking_id}.ics";
+    }
+
+    /**
+     * Get Google Meet link for a booking
+     */
+    public function getGoogleMeetLink(object $booking): string|false
+    {
+        if (empty($booking->google_event_id)) {
+            return false;
+        }
+
+        $access_token = $this->getAccessToken();
+        if (!$access_token) {
+            return false;
+        }
+
+        $calendar_id = get_option('hb_booking_google_calendar_id', 'primary');
+
+        $response = wp_remote_get(
+            "https://www.googleapis.com/calendar/v3/calendars/{$calendar_id}/events/{$booking->google_event_id}",
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $access_token,
+                ],
+                'timeout' => 30,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        // Get Google Meet link from conference data
+        if (isset($body['conferenceData']['entryPoints'])) {
+            foreach ($body['conferenceData']['entryPoints'] as $entry) {
+                if ($entry['entryPointType'] === 'video') {
+                    return $entry['uri'];
+                }
+            }
+        }
+
+        // Alternative: Get from hangoutLink (deprecated but still works)
+        if (isset($body['hangoutLink'])) {
+            return $body['hangoutLink'];
+        }
+
+        return false;
     }
 }

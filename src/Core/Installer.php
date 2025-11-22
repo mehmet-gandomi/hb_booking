@@ -15,6 +15,7 @@ class Installer
     {
         $this->createTables();
         $this->setDefaultOptions();
+        $this->runMigrations();
     }
 
     /**
@@ -41,6 +42,8 @@ class Installer
             notes text DEFAULT NULL,
             status varchar(20) DEFAULT 'pending',
             google_event_id varchar(255) DEFAULT NULL,
+            reminder_sent_24h tinyint(1) DEFAULT 0,
+            reminder_sent_30min tinyint(1) DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
@@ -74,6 +77,69 @@ class Installer
             if (get_option($key) === false) {
                 add_option($key, $value);
             }
+        }
+    }
+
+    /**
+     * Run database migrations
+     */
+    private function runMigrations(): void
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'hb_bookings';
+
+        // Check if old reminder_sent column exists (for backward compatibility)
+        $old_column = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'reminder_sent'",
+                DB_NAME,
+                $table_name
+            )
+        );
+
+        // If old column exists, rename it to reminder_sent_30min
+        if (!empty($old_column)) {
+            $wpdb->query(
+                "ALTER TABLE {$table_name}
+                CHANGE COLUMN reminder_sent reminder_sent_30min tinyint(1) DEFAULT 0"
+            );
+        }
+
+        // Check if reminder_sent_24h column exists
+        $column_24h = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'reminder_sent_24h'",
+                DB_NAME,
+                $table_name
+            )
+        );
+
+        // Add reminder_sent_24h column if it doesn't exist
+        if (empty($column_24h)) {
+            $wpdb->query(
+                "ALTER TABLE {$table_name}
+                ADD COLUMN reminder_sent_24h tinyint(1) DEFAULT 0 AFTER google_event_id"
+            );
+        }
+
+        // Check if reminder_sent_30min column exists
+        $column_30min = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'reminder_sent_30min'",
+                DB_NAME,
+                $table_name
+            )
+        );
+
+        // Add reminder_sent_30min column if it doesn't exist
+        if (empty($column_30min)) {
+            $wpdb->query(
+                "ALTER TABLE {$table_name}
+                ADD COLUMN reminder_sent_30min tinyint(1) DEFAULT 0 AFTER reminder_sent_24h"
+            );
         }
     }
 }

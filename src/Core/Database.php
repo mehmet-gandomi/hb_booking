@@ -189,6 +189,109 @@ class Database
     }
 
     /**
+     * Get bookings that need 30-minute reminder emails
+     */
+    public function getBookingsNeeding30MinReminders(): array
+    {
+        global $wpdb;
+
+        // Calculate the time range: 30-45 minutes from now
+        // We check a 15-minute window to account for cron job intervals
+        $now = current_time('mysql');
+        $reminder_start = date('Y-m-d H:i:s', strtotime('+30 minutes', strtotime($now)));
+        $reminder_end = date('Y-m-d H:i:s', strtotime('+45 minutes', strtotime($now)));
+
+        $query = $wpdb->prepare(
+            "SELECT * FROM {$this->table_name}
+             WHERE CONCAT(booking_date, ' ', booking_time) BETWEEN %s AND %s
+             AND status IN ('pending', 'confirmed')
+             AND (reminder_sent_30min = 0 OR reminder_sent_30min IS NULL)
+             ORDER BY booking_date ASC, booking_time ASC",
+            $reminder_start,
+            $reminder_end
+        );
+
+        return $wpdb->get_results($query);
+    }
+
+    /**
+     * Get bookings that need 24-hour reminder emails
+     */
+    public function getBookingsNeeding24HourReminders(): array
+    {
+        global $wpdb;
+
+        // Calculate the time range: 24 hours from now (with 15-minute window)
+        $now = current_time('mysql');
+        $reminder_start = date('Y-m-d H:i:s', strtotime('+24 hours', strtotime($now)));
+        $reminder_end = date('Y-m-d H:i:s', strtotime('+24 hours 15 minutes', strtotime($now)));
+
+        $query = $wpdb->prepare(
+            "SELECT * FROM {$this->table_name}
+             WHERE CONCAT(booking_date, ' ', booking_time) BETWEEN %s AND %s
+             AND status IN ('pending', 'confirmed')
+             AND (reminder_sent_24h = 0 OR reminder_sent_24h IS NULL)
+             ORDER BY booking_date ASC, booking_time ASC",
+            $reminder_start,
+            $reminder_end
+        );
+
+        return $wpdb->get_results($query);
+    }
+
+    /**
+     * Get bookings that need reminder emails (deprecated - kept for backward compatibility)
+     */
+    public function getBookingsNeedingReminders(): array
+    {
+        return $this->getBookingsNeeding30MinReminders();
+    }
+
+    /**
+     * Mark 30-minute reminder as sent for a booking
+     */
+    public function mark30MinReminderSent(int $id): bool
+    {
+        global $wpdb;
+
+        $result = $wpdb->update(
+            $this->table_name,
+            ['reminder_sent_30min' => 1],
+            ['id' => $id],
+            ['%d'],
+            ['%d']
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Mark 24-hour reminder as sent for a booking
+     */
+    public function mark24HourReminderSent(int $id): bool
+    {
+        global $wpdb;
+
+        $result = $wpdb->update(
+            $this->table_name,
+            ['reminder_sent_24h' => 1],
+            ['id' => $id],
+            ['%d'],
+            ['%d']
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Mark reminder as sent for a booking (deprecated - kept for backward compatibility)
+     */
+    public function markReminderSent(int $id): bool
+    {
+        return $this->mark30MinReminderSent($id);
+    }
+
+    /**
      * Sanitize booking data
      */
     private function sanitizeBookingData(array $data): array
