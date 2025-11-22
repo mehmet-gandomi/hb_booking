@@ -75,6 +75,9 @@ final class Plugin
         $installer = new Core\Installer();
         $installer->install();
 
+        // Initialize ReminderService first to register custom schedules
+        Services\ReminderService::getInstance();
+
         // Schedule reminder cron job
         Services\ReminderService::scheduleCron();
 

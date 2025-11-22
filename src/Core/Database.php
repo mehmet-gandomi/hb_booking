@@ -163,9 +163,6 @@ class Database
 
         $count = $wpdb->get_var($query);
 
-        // Debug logging
-        error_log("HB Booking - Time Slot Check: Date={$date}, Time={$time}, Count={$count}, Available=" . ($count === '0' || $count === 0 ? 'true' : 'false'));
-
         return $count === '0' || $count === 0 || $count === null;
     }
 

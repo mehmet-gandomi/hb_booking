@@ -53,7 +53,23 @@ class ReminderService
      */
     public static function scheduleCron(): void
     {
-        if (!wp_next_scheduled('hb_booking_send_reminders')) {
+        // Ensure the custom schedule is registered before using it
+        add_filter('cron_schedules', function($schedules) {
+            if (!isset($schedules['every_15_minutes'])) {
+                $schedules['every_15_minutes'] = [
+                    'interval' => 15 * 60,
+                    'display'  => __('Every 15 Minutes', 'hb-booking'),
+                ];
+            }
+            return $schedules;
+        });
+
+        $next_scheduled = wp_next_scheduled('hb_booking_send_reminders');
+
+        if (!$next_scheduled) {
+            // Clear any existing scheduled events first
+            wp_clear_scheduled_hook('hb_booking_send_reminders');
+
             wp_schedule_event(time(), 'every_15_minutes', 'hb_booking_send_reminders');
         }
     }
@@ -89,11 +105,8 @@ class ReminderService
         $bookings = $this->database->getBookingsNeeding30MinReminders();
 
         if (empty($bookings)) {
-            error_log("HB Booking - No bookings need 30-minute reminders at this time");
             return;
         }
-
-        error_log("HB Booking - Found " . count($bookings) . " bookings needing 30-minute reminders");
 
         foreach ($bookings as $booking) {
             // Send 30-minute reminder email
@@ -102,9 +115,6 @@ class ReminderService
             // Mark as sent if successful
             if ($sent) {
                 $this->database->mark30MinReminderSent($booking->id);
-                error_log("HB Booking - 30-min reminder sent for booking #{$booking->id} to {$booking->customer_email}");
-            } else {
-                error_log("HB Booking - Failed to send 30-min reminder for booking #{$booking->id}");
             }
         }
     }
@@ -117,11 +127,8 @@ class ReminderService
         $bookings = $this->database->getBookingsNeeding24HourReminders();
 
         if (empty($bookings)) {
-            error_log("HB Booking - No bookings need 24-hour reminders at this time");
             return;
         }
-
-        error_log("HB Booking - Found " . count($bookings) . " bookings needing 24-hour reminders");
 
         foreach ($bookings as $booking) {
             // Send 24-hour reminder email
@@ -130,9 +137,6 @@ class ReminderService
             // Mark as sent if successful
             if ($sent) {
                 $this->database->mark24HourReminderSent($booking->id);
-                error_log("HB Booking - 24-hour reminder sent for booking #{$booking->id} to {$booking->customer_email}");
-            } else {
-                error_log("HB Booking - Failed to send 24-hour reminder for booking #{$booking->id}");
             }
         }
     }
