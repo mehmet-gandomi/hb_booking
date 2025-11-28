@@ -629,9 +629,21 @@ class BookingAdmin
             <div class="card" style="max-width: 100%;">
                 <h2><?php esc_html_e('1. Cron Job Status', 'hb-booking'); ?></h2>
                 <?php if ($next_run): ?>
+                    <?php
+                    // Compare in UTC: wp_next_scheduled returns UTC timestamp, time() also returns UTC
+                    $current_utc_timestamp = time();
+                    $is_overdue = $next_run < $current_utc_timestamp;
+
+                    // Convert to WordPress timezone for display
+                    $next_run_local = $next_run + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                    ?>
                     <p>✓ <strong style="color: green;"><?php esc_html_e('Cron job is scheduled', 'hb-booking'); ?></strong></p>
-                    <p><?php esc_html_e('Next run:', 'hb-booking'); ?> <code><?php echo esc_html(date('Y-m-d H:i:s', $next_run)); ?></code></p>
+                    <p><?php esc_html_e('Next run:', 'hb-booking'); ?> <code><?php echo esc_html(date('Y-m-d H:i:s', $next_run_local)); ?></code></p>
                     <p><?php esc_html_e('Current time:', 'hb-booking'); ?> <code><?php echo esc_html(current_time('mysql')); ?></code></p>
+                    <?php if ($is_overdue): ?>
+                        <p style="color: orange;">⚠ <strong><?php esc_html_e('Cron is overdue - WordPress cron only runs when someone visits the site.', 'hb-booking'); ?></strong></p>
+                        <p><?php esc_html_e('This page visit should trigger it. Refresh in a few seconds to see if it ran.', 'hb-booking'); ?></p>
+                    <?php endif; ?>
                 <?php else: ?>
                     <p>✗ <strong style="color: red;"><?php esc_html_e('Cron job is NOT scheduled', 'hb-booking'); ?></strong></p>
                     <p><?php esc_html_e('Try deactivating and reactivating the plugin.', 'hb-booking'); ?></p>
