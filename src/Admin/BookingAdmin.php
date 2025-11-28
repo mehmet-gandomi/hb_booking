@@ -84,6 +84,15 @@ class BookingAdmin
             'hb-booking-debug',
             [$this, 'renderDebugPage']
         );
+
+        add_submenu_page(
+            'hb-booking',
+            __('Test Reminders', 'hb-booking'),
+            __('Test Reminders', 'hb-booking'),
+            'manage_options',
+            'hb-booking-test-reminders',
+            [$this, 'renderTestRemindersPage']
+        );
     }
 
     /**
@@ -575,6 +584,191 @@ class BookingAdmin
                     </a>
                 </p>
             <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Test Reminders page
+     */
+    public function renderTestRemindersPage(): void
+    {
+        // Handle manual trigger
+        $triggered = false;
+        if (isset($_POST['trigger_reminders']) && check_admin_referer('hb_trigger_reminders')) {
+            $service = \HB\Booking\Services\ReminderService::getInstance();
+            $service->sendReminders();
+            $triggered = true;
+        }
+
+        // Get data for display
+        $db = $this->database;
+        $bookings_24h = $db->getBookingsNeeding24HourReminders();
+        $bookings_30min = $db->getBookingsNeeding30MinReminders();
+        $next_run = wp_next_scheduled('hb_booking_send_reminders');
+
+        // Time calculations (must match Database.php logic)
+        $now = current_time('timestamp');
+        $reminder_24h_start = $now + (23 * HOUR_IN_SECONDS);
+        $reminder_24h_end = $now + (25 * HOUR_IN_SECONDS);
+        $reminder_30min_start = $now + (25 * MINUTE_IN_SECONDS);
+        $reminder_30min_end = $now + (35 * MINUTE_IN_SECONDS);
+
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Test Reminder System', 'hb-booking'); ?></h1>
+
+            <?php if ($triggered): ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><strong><?php esc_html_e('Reminder check triggered successfully!', 'hb-booking'); ?></strong></p>
+                    <p><?php esc_html_e('Check the Debug Logs page for details about sent emails.', 'hb-booking'); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <!-- Cron Status -->
+            <div class="card" style="max-width: 100%;">
+                <h2><?php esc_html_e('1. Cron Job Status', 'hb-booking'); ?></h2>
+                <?php if ($next_run): ?>
+                    <p>✓ <strong style="color: green;"><?php esc_html_e('Cron job is scheduled', 'hb-booking'); ?></strong></p>
+                    <p><?php esc_html_e('Next run:', 'hb-booking'); ?> <code><?php echo esc_html(date('Y-m-d H:i:s', $next_run)); ?></code></p>
+                    <p><?php esc_html_e('Current time:', 'hb-booking'); ?> <code><?php echo esc_html(current_time('mysql')); ?></code></p>
+                <?php else: ?>
+                    <p>✗ <strong style="color: red;"><?php esc_html_e('Cron job is NOT scheduled', 'hb-booking'); ?></strong></p>
+                    <p><?php esc_html_e('Try deactivating and reactivating the plugin.', 'hb-booking'); ?></p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Time Windows -->
+            <div class="card" style="max-width: 100%;">
+                <h2><?php esc_html_e('2. Reminder Time Windows', 'hb-booking'); ?></h2>
+                <p><?php esc_html_e('Current time:', 'hb-booking'); ?> <code><?php echo esc_html(current_time('mysql')); ?></code></p>
+                <p>
+                    <strong><?php esc_html_e('24-hour reminder window (23-25 hours from now):', 'hb-booking'); ?></strong><br>
+                    <code><?php echo esc_html(gmdate('Y-m-d H:i:s', $reminder_24h_start)); ?></code>
+                    <?php esc_html_e('to', 'hb-booking'); ?>
+                    <code><?php echo esc_html(gmdate('Y-m-d H:i:s', $reminder_24h_end)); ?></code>
+                    <span style="color: #666;">(2-hour window)</span>
+                </p>
+                <p>
+                    <strong><?php esc_html_e('30-minute reminder window (25-35 minutes from now):', 'hb-booking'); ?></strong><br>
+                    <code><?php echo esc_html(gmdate('Y-m-d H:i:s', $reminder_30min_start)); ?></code>
+                    <?php esc_html_e('to', 'hb-booking'); ?>
+                    <code><?php echo esc_html(gmdate('Y-m-d H:i:s', $reminder_30min_end)); ?></code>
+                    <span style="color: #666;">(10-minute window)</span>
+                </p>
+            </div>
+
+            <!-- 24-Hour Reminders -->
+            <div class="card" style="max-width: 100%;">
+                <h2><?php esc_html_e('3. Bookings Needing 24-Hour Reminders', 'hb-booking'); ?></h2>
+                <p><?php esc_html_e('Found:', 'hb-booking'); ?> <strong><?php echo count($bookings_24h); ?></strong> <?php esc_html_e('bookings', 'hb-booking'); ?></p>
+
+                <?php if (!empty($bookings_24h)): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('ID', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Customer Name', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Email', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Date', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Time', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Status', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Reminder Sent', 'hb-booking'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($bookings_24h as $booking): ?>
+                                <tr>
+                                    <td><?php echo esc_html($booking->id); ?></td>
+                                    <td><?php echo esc_html($booking->customer_name); ?></td>
+                                    <td><?php echo esc_html($booking->customer_email); ?></td>
+                                    <td><?php echo esc_html($this->dateConverter->formatDate($booking->booking_date)); ?></td>
+                                    <td><?php echo esc_html($booking->booking_time); ?></td>
+                                    <td><?php echo esc_html($booking->status); ?></td>
+                                    <td><?php echo $booking->reminder_sent_24h ? '✓' : '✗'; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p><em><?php esc_html_e('No bookings found in the 24-hour reminder window.', 'hb-booking'); ?></em></p>
+                <?php endif; ?>
+            </div>
+
+            <!-- 30-Minute Reminders -->
+            <div class="card" style="max-width: 100%;">
+                <h2><?php esc_html_e('4. Bookings Needing 30-Minute Reminders', 'hb-booking'); ?></h2>
+                <p><?php esc_html_e('Found:', 'hb-booking'); ?> <strong><?php echo count($bookings_30min); ?></strong> <?php esc_html_e('bookings', 'hb-booking'); ?></p>
+
+                <?php if (!empty($bookings_30min)): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('ID', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Customer Name', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Email', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Date', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Time', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Status', 'hb-booking'); ?></th>
+                                <th><?php esc_html_e('Reminder Sent', 'hb-booking'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($bookings_30min as $booking): ?>
+                                <tr>
+                                    <td><?php echo esc_html($booking->id); ?></td>
+                                    <td><?php echo esc_html($booking->customer_name); ?></td>
+                                    <td><?php echo esc_html($booking->customer_email); ?></td>
+                                    <td><?php echo esc_html($this->dateConverter->formatDate($booking->booking_date)); ?></td>
+                                    <td><?php echo esc_html($booking->booking_time); ?></td>
+                                    <td><?php echo esc_html($booking->status); ?></td>
+                                    <td><?php echo $booking->reminder_sent_30min ? '✓' : '✗'; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p><em><?php esc_html_e('No bookings found in the 30-minute reminder window.', 'hb-booking'); ?></em></p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Email Settings -->
+            <div class="card" style="max-width: 100%;">
+                <h2><?php esc_html_e('5. Email Settings', 'hb-booking'); ?></h2>
+                <?php $notifications_enabled = get_option('hb_booking_enable_notifications', true); ?>
+                <p>
+                    <?php esc_html_e('Notifications enabled:', 'hb-booking'); ?>
+                    <?php if ($notifications_enabled): ?>
+                        <strong style="color: green;">✓ <?php esc_html_e('Yes', 'hb-booking'); ?></strong>
+                    <?php else: ?>
+                        <strong style="color: red;">✗ <?php esc_html_e('No', 'hb-booking'); ?></strong>
+                        <br><em><?php esc_html_e('Enable notifications in Settings to send reminder emails.', 'hb-booking'); ?></em>
+                    <?php endif; ?>
+                </p>
+                <p><?php esc_html_e('Admin email:', 'hb-booking'); ?> <code><?php echo esc_html(get_option('admin_email')); ?></code></p>
+            </div>
+
+            <!-- Manual Trigger -->
+            <div class="card" style="max-width: 100%;">
+                <h2><?php esc_html_e('6. Manual Test', 'hb-booking'); ?></h2>
+                <p><?php esc_html_e('Click the button below to manually trigger the reminder check. This will send emails to any bookings that fall within the current reminder windows.', 'hb-booking'); ?></p>
+                <form method="post">
+                    <?php wp_nonce_field('hb_trigger_reminders'); ?>
+                    <button type="submit" name="trigger_reminders" class="button button-primary button-large">
+                        <?php esc_html_e('Trigger Reminder Check Now', 'hb-booking'); ?>
+                    </button>
+                </form>
+                <p><em><?php esc_html_e('Note: Check the Debug Logs page after triggering to see the results.', 'hb-booking'); ?></em></p>
+            </div>
+
+            <p>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=hb-booking-debug')); ?>" class="button">
+                    <?php esc_html_e('View Debug Logs', 'hb-booking'); ?>
+                </a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=hb-booking-settings')); ?>" class="button">
+                    <?php esc_html_e('Go to Settings', 'hb-booking'); ?>
+                </a>
+            </p>
         </div>
         <?php
     }
