@@ -152,9 +152,9 @@ class EmailService
                         <?php if ($booking->notes): ?>
                             <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->notes); ?></p>
                         <?php endif; ?>
-                        <p><strong><?php esc_html_e('Status:', 'hb-booking'); ?></strong>
-                            <span style="color: #f39c12;"><?php echo esc_html(ucfirst($booking->status)); ?></span>
-                        </p>
+                        <!-- <p><strong><?php //esc_html_e('Status:', 'hb-booking'); ?></strong>
+                            <span style="color: #f39c12;"><?php //echo esc_html(ucfirst($booking->status)); ?></span>
+                        </p> -->
                     </div>
 
                     <p><?php esc_html_e('We will confirm your booking shortly. If you have any questions, please don\'t hesitate to contact us.', 'hb-booking'); ?></p>

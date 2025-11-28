@@ -226,6 +226,11 @@
                     altFormat: 'YYYY-MM-DD',
                     calendarType: 'persian',
                     viewMode: 'day',
+                    calendar:{
+                        persian: {
+                            leapYearMode: 'astronomical'
+                        }
+                    },
                     formatter: function(unix) {
                         // Force English numbers instead of Persian digits
                         const pDate = new persianDate(unix);
