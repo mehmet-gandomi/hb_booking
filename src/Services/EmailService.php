@@ -10,12 +10,10 @@ class EmailService
 {
     private static ?EmailService $instance = null;
     private DateConverter $dateConverter;
-    private CalendarService $calendarService;
 
     private function __construct()
     {
         $this->dateConverter = DateConverter::getInstance();
-        $this->calendarService = CalendarService::getInstance();
         add_filter('wp_mail_content_type', [$this, 'setHtmlContentType']);
     }
 
@@ -109,62 +107,6 @@ class EmailService
     }
 
     /**
-     * Send 30-minute reminder email
-     */
-    public function send30MinReminderEmail(object $booking): bool
-    {
-        if (!get_option('hb_booking_enable_notifications', true)) {
-            return false;
-        }
-
-        $to = $booking->customer_email;
-        $subject = sprintf(
-            __('[%s] Reminder: Your Booking is in 30 Minutes', 'hb-booking'),
-            get_bloginfo('name')
-        );
-
-        $message = $this->get30MinReminderTemplate($booking);
-
-        $headers = [
-            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>',
-        ];
-
-        return wp_mail($to, $subject, $message, $headers);
-    }
-
-    /**
-     * Send 24-hour reminder email
-     */
-    public function send24HourReminderEmail(object $booking): bool
-    {
-        if (!get_option('hb_booking_enable_notifications', true)) {
-            return false;
-        }
-
-        $to = $booking->customer_email;
-        $subject = sprintf(
-            __('[%s] Reminder: Your Booking is Tomorrow', 'hb-booking'),
-            get_bloginfo('name')
-        );
-
-        $message = $this->get24HourReminderTemplate($booking);
-
-        $headers = [
-            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>',
-        ];
-
-        return wp_mail($to, $subject, $message, $headers);
-    }
-
-    /**
-     * Send reminder email (deprecated - kept for backward compatibility)
-     */
-    public function sendReminderEmail(object $booking): bool
-    {
-        return $this->send30MinReminderEmail($booking);
-    }
-
-    /**
      * Get confirmation email template
      */
     private function getConfirmationEmailTemplate(object $booking): string
@@ -210,9 +152,9 @@ class EmailService
                         <?php if ($booking->notes): ?>
                             <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->notes); ?></p>
                         <?php endif; ?>
-                        <p><strong><?php esc_html_e('Status:', 'hb-booking'); ?></strong>
-                            <span style="color: #f39c12;"><?php echo esc_html(ucfirst($booking->status)); ?></span>
-                        </p>
+                        <!-- <p><strong><?php //esc_html_e('Status:', 'hb-booking'); ?></strong>
+                            <span style="color: #f39c12;"><?php //echo esc_html(ucfirst($booking->status)); ?></span>
+                        </p> -->
                     </div>
 
                     <p><?php esc_html_e('We will confirm your booking shortly. If you have any questions, please don\'t hesitate to contact us.', 'hb-booking'); ?></p>
@@ -308,6 +250,54 @@ class EmailService
     }
 
     /**
+     * Send 30-minute reminder email to customer
+     */
+    public function send30MinReminderEmail(object $booking): bool
+    {
+        if (!get_option('hb_booking_enable_notifications', true)) {
+            return false;
+        }
+
+        $to = $booking->customer_email;
+        $subject = sprintf(
+            __('[%s] Reminder: Your Appointment in 30 Minutes', 'hb-booking'),
+            get_bloginfo('name')
+        );
+
+        $message = $this->get30MinReminderTemplate($booking);
+
+        $headers = [
+            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>',
+        ];
+
+        return wp_mail($to, $subject, $message, $headers);
+    }
+
+    /**
+     * Send 24-hour reminder email to customer
+     */
+    public function send24HourReminderEmail(object $booking): bool
+    {
+        if (!get_option('hb_booking_enable_notifications', true)) {
+            return false;
+        }
+
+        $to = $booking->customer_email;
+        $subject = sprintf(
+            __('[%s] Reminder: Your Appointment Tomorrow', 'hb-booking'),
+            get_bloginfo('name')
+        );
+
+        $message = $this->get24HourReminderTemplate($booking);
+
+        $headers = [
+            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>',
+        ];
+
+        return wp_mail($to, $subject, $message, $headers);
+    }
+
+    /**
      * Get status update template
      */
     private function getStatusUpdateTemplate(object $booking): string
@@ -386,9 +376,6 @@ class EmailService
         $date = $this->dateConverter->formatDate($booking->booking_date);
         $time = date_i18n(get_option('time_format'), strtotime($booking->booking_time));
 
-        // Get Google Meet link if available
-        $meet_link = $this->calendarService->getGoogleMeetLink($booking);
-
         ob_start();
         ?>
         <!DOCTYPE html>
@@ -401,29 +388,24 @@ class EmailService
                 .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
                 .content { background: #f9f9f9; padding: 20px; }
                 .booking-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #FF9800; }
-                .reminder-badge { display: inline-block; padding: 10px 20px; background: #FF9800; color: white; border-radius: 4px; font-size: 16px; font-weight: bold; margin: 20px 0; }
-                .meet-button { display: inline-block; padding: 15px 30px; background: #4285F4; color: white; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: bold; margin: 20px 0; }
-                .meet-button:hover { background: #3367D6; }
-                .meet-box { background: #E8F0FE; border: 2px solid #4285F4; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+                .alert-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 4px; }
                 .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
-                    <h1><?php esc_html_e('Booking Reminder', 'hb-booking'); ?></h1>
+                    <h1><?php esc_html_e('⏰ Appointment Reminder', 'hb-booking'); ?></h1>
                 </div>
                 <div class="content">
                     <p><?php printf(__('Hello %s,', 'hb-booking'), esc_html($booking->customer_name)); ?></p>
 
-                    <div style="text-align: center;">
-                        <span class="reminder-badge"><?php esc_html_e('Your booking is in 30 minutes!', 'hb-booking'); ?></span>
+                    <div class="alert-box">
+                        <strong><?php esc_html_e('Your appointment is starting in 30 minutes!', 'hb-booking'); ?></strong>
                     </div>
 
-                    <p><?php esc_html_e('This is a friendly reminder that you have an upcoming booking:', 'hb-booking'); ?></p>
-
                     <div class="booking-details">
-                        <h3><?php esc_html_e('Booking Details', 'hb-booking'); ?></h3>
+                        <h3><?php esc_html_e('Appointment Details', 'hb-booking'); ?></h3>
                         <p><strong><?php esc_html_e('Date:', 'hb-booking'); ?></strong> <?php echo esc_html($date); ?></p>
                         <p><strong><?php esc_html_e('Time:', 'hb-booking'); ?></strong> <?php echo esc_html($time); ?></p>
                         <?php if ($booking->business_status): ?>
@@ -432,44 +414,16 @@ class EmailService
                         <?php if ($booking->target_country): ?>
                             <p><strong><?php esc_html_e('Target Country:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->target_country); ?></p>
                         <?php endif; ?>
-                        <?php if ($booking->team_size): ?>
-                            <p><strong><?php esc_html_e('Team Size:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->team_size); ?> <?php echo $booking->team_size == 1 ? esc_html__('person', 'hb-booking') : esc_html__('people', 'hb-booking'); ?></p>
-                        <?php endif; ?>
-                        <?php if ($booking->services): ?>
-                            <p><strong><?php esc_html_e('Services:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->services)); ?></p>
-                        <?php endif; ?>
                         <?php if ($booking->notes): ?>
-                            <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->notes)); ?></p>
+                            <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->notes); ?></p>
                         <?php endif; ?>
-                        <p><strong><?php esc_html_e('Booking ID:', 'hb-booking'); ?></strong> #<?php echo esc_html($booking->id); ?></p>
                     </div>
 
-                    <?php if ($meet_link): ?>
-                    <div class="meet-box">
-                        <h3 style="margin-top: 0; color: #1967D2;">
-                            <span style="font-size: 24px;">📹</span>
-                            <?php esc_html_e('Join Your Meeting', 'hb-booking'); ?>
-                        </h3>
-                        <p><?php esc_html_e('Click the button below to join your Google Meet video call:', 'hb-booking'); ?></p>
-                        <a href="<?php echo esc_url($meet_link); ?>" class="meet-button">
-                            <?php esc_html_e('Join Google Meet', 'hb-booking'); ?>
-                        </a>
-                        <p style="margin-top: 15px; font-size: 12px; color: #666;">
-                            <?php esc_html_e('Meeting Link:', 'hb-booking'); ?><br>
-                            <a href="<?php echo esc_url($meet_link); ?>" style="color: #4285F4; word-break: break-all;">
-                                <?php echo esc_html($meet_link); ?>
-                            </a>
-                        </p>
-                    </div>
-                    <?php endif; ?>
-
-                    <p><?php esc_html_e('Please make sure you are ready for your appointment. If you need to make any changes, please contact us as soon as possible.', 'hb-booking'); ?></p>
-
-                    <p><?php esc_html_e('We look forward to seeing you soon!', 'hb-booking'); ?></p>
+                    <p><?php esc_html_e('Please make sure you are ready for your appointment. If you need to reschedule or cancel, please contact us as soon as possible.', 'hb-booking'); ?></p>
                 </div>
                 <div class="footer">
                     <p>&copy; <?php echo esc_html(date('Y') . ' ' . get_bloginfo('name')); ?></p>
-                    <p><?php esc_html_e('This is an automated reminder message, please do not reply directly to this email.', 'hb-booking'); ?></p>
+                    <p><?php esc_html_e('This is an automated reminder, please do not reply directly to this email.', 'hb-booking'); ?></p>
                 </div>
             </div>
         </body>
@@ -486,9 +440,6 @@ class EmailService
         $date = $this->dateConverter->formatDate($booking->booking_date);
         $time = date_i18n(get_option('time_format'), strtotime($booking->booking_time));
 
-        // Get Google Meet link if available
-        $meet_link = $this->calendarService->getGoogleMeetLink($booking);
-
         ob_start();
         ?>
         <!DOCTYPE html>
@@ -501,29 +452,24 @@ class EmailService
                 .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
                 .content { background: #f9f9f9; padding: 20px; }
                 .booking-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #2196F3; }
-                .reminder-badge { display: inline-block; padding: 10px 20px; background: #2196F3; color: white; border-radius: 4px; font-size: 16px; font-weight: bold; margin: 20px 0; }
-                .meet-button { display: inline-block; padding: 15px 30px; background: #4285F4; color: white; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: bold; margin: 20px 0; }
-                .meet-button:hover { background: #3367D6; }
-                .meet-box { background: #E8F0FE; border: 2px solid #4285F4; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+                .alert-box { background: #d1ecf1; border: 1px solid #0c5460; padding: 15px; margin: 15px 0; border-radius: 4px; }
                 .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
-                    <h1><?php esc_html_e('Booking Reminder - Tomorrow', 'hb-booking'); ?></h1>
+                    <h1><?php esc_html_e('📅 Appointment Reminder', 'hb-booking'); ?></h1>
                 </div>
                 <div class="content">
                     <p><?php printf(__('Hello %s,', 'hb-booking'), esc_html($booking->customer_name)); ?></p>
 
-                    <div style="text-align: center;">
-                        <span class="reminder-badge"><?php esc_html_e('Your booking is tomorrow!', 'hb-booking'); ?></span>
+                    <div class="alert-box">
+                        <strong><?php esc_html_e('Your appointment is scheduled for tomorrow!', 'hb-booking'); ?></strong>
                     </div>
 
-                    <p><?php esc_html_e('This is a friendly reminder that you have a booking scheduled for tomorrow:', 'hb-booking'); ?></p>
-
                     <div class="booking-details">
-                        <h3><?php esc_html_e('Booking Details', 'hb-booking'); ?></h3>
+                        <h3><?php esc_html_e('Appointment Details', 'hb-booking'); ?></h3>
                         <p><strong><?php esc_html_e('Date:', 'hb-booking'); ?></strong> <?php echo esc_html($date); ?></p>
                         <p><strong><?php esc_html_e('Time:', 'hb-booking'); ?></strong> <?php echo esc_html($time); ?></p>
                         <?php if ($booking->business_status): ?>
@@ -532,47 +478,16 @@ class EmailService
                         <?php if ($booking->target_country): ?>
                             <p><strong><?php esc_html_e('Target Country:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->target_country); ?></p>
                         <?php endif; ?>
-                        <?php if ($booking->team_size): ?>
-                            <p><strong><?php esc_html_e('Team Size:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->team_size); ?> <?php echo $booking->team_size == 1 ? esc_html__('person', 'hb-booking') : esc_html__('people', 'hb-booking'); ?></p>
-                        <?php endif; ?>
-                        <?php if ($booking->services): ?>
-                            <p><strong><?php esc_html_e('Services:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->services)); ?></p>
-                        <?php endif; ?>
                         <?php if ($booking->notes): ?>
-                            <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo nl2br(esc_html($booking->notes)); ?></p>
+                            <p><strong><?php esc_html_e('Notes:', 'hb-booking'); ?></strong> <?php echo esc_html($booking->notes); ?></p>
                         <?php endif; ?>
-                        <p><strong><?php esc_html_e('Booking ID:', 'hb-booking'); ?></strong> #<?php echo esc_html($booking->id); ?></p>
                     </div>
 
-                    <?php if ($meet_link): ?>
-                    <div class="meet-box">
-                        <h3 style="margin-top: 0; color: #1967D2;">
-                            <span style="font-size: 24px;">📹</span>
-                            <?php esc_html_e('Video Meeting Details', 'hb-booking'); ?>
-                        </h3>
-                        <p><?php esc_html_e('Your meeting will be held via Google Meet. You can join using the link below:', 'hb-booking'); ?></p>
-                        <a href="<?php echo esc_url($meet_link); ?>" class="meet-button">
-                            <?php esc_html_e('Join Google Meet', 'hb-booking'); ?>
-                        </a>
-                        <p style="margin-top: 15px; font-size: 12px; color: #666;">
-                            <?php esc_html_e('Meeting Link:', 'hb-booking'); ?><br>
-                            <a href="<?php echo esc_url($meet_link); ?>" style="color: #4285F4; word-break: break-all;">
-                                <?php echo esc_html($meet_link); ?>
-                            </a>
-                        </p>
-                        <p style="margin-top: 10px; font-size: 13px; color: #555;">
-                            <?php esc_html_e('💡 Tip: You can test your connection and setup before the meeting.', 'hb-booking'); ?>
-                        </p>
-                    </div>
-                    <?php endif; ?>
-
-                    <p><?php esc_html_e('Please make sure you are prepared for your appointment. If you need to make any changes or have any questions, please contact us.', 'hb-booking'); ?></p>
-
-                    <p><?php esc_html_e('We look forward to meeting with you tomorrow!', 'hb-booking'); ?></p>
+                    <p><?php esc_html_e('We look forward to meeting with you tomorrow. If you need to reschedule or cancel, please contact us as soon as possible.', 'hb-booking'); ?></p>
                 </div>
                 <div class="footer">
                     <p>&copy; <?php echo esc_html(date('Y') . ' ' . get_bloginfo('name')); ?></p>
-                    <p><?php esc_html_e('This is an automated reminder message, please do not reply directly to this email.', 'hb-booking'); ?></p>
+                    <p><?php esc_html_e('This is an automated reminder, please do not reply directly to this email.', 'hb-booking'); ?></p>
                 </div>
             </div>
         </body>

@@ -192,23 +192,28 @@ class Database
     {
         global $wpdb;
 
-        // Calculate the time range: 30-45 minutes from now
-        // We check a 15-minute window to account for cron job intervals
-        $now = current_time('mysql');
-        $reminder_start = date('Y-m-d H:i:s', strtotime('+30 minutes', strtotime($now)));
-        $reminder_end = date('Y-m-d H:i:s', strtotime('+45 minutes', strtotime($now)));
+        // Calculate the time range: bookings 25-35 minutes from now
+        // This 10-minute window ensures we catch bookings even if cron is delayed
+        $now = current_time('timestamp');
+        $reminder_start = $now + (25 * MINUTE_IN_SECONDS);
+        $reminder_end = $now + (35 * MINUTE_IN_SECONDS);
+
+        $start_datetime = gmdate('Y-m-d H:i:s', $reminder_start);
+        $end_datetime = gmdate('Y-m-d H:i:s', $reminder_end);
 
         $query = $wpdb->prepare(
             "SELECT * FROM {$this->table_name}
-             WHERE CONCAT(booking_date, ' ', booking_time) BETWEEN %s AND %s
+             WHERE CONCAT(booking_date, ' ', booking_time) >= %s
+             AND CONCAT(booking_date, ' ', booking_time) < %s
              AND status IN ('pending', 'confirmed')
              AND (reminder_sent_30min = 0 OR reminder_sent_30min IS NULL)
              ORDER BY booking_date ASC, booking_time ASC",
-            $reminder_start,
-            $reminder_end
+            $start_datetime,
+            $end_datetime
         );
 
-        return $wpdb->get_results($query);
+        $results = $wpdb->get_results($query);
+        return $results ?: [];
     }
 
     /**
@@ -218,22 +223,28 @@ class Database
     {
         global $wpdb;
 
-        // Calculate the time range: 24 hours from now (with 15-minute window)
-        $now = current_time('mysql');
-        $reminder_start = date('Y-m-d H:i:s', strtotime('+24 hours', strtotime($now)));
-        $reminder_end = date('Y-m-d H:i:s', strtotime('+24 hours 15 minutes', strtotime($now)));
+        // Calculate the time range: bookings 23-25 hours from now
+        // This 2-hour window ensures we catch bookings even if cron is delayed
+        $now = current_time('timestamp');
+        $reminder_start = $now + (23 * HOUR_IN_SECONDS);
+        $reminder_end = $now + (25 * HOUR_IN_SECONDS);
+
+        $start_datetime = gmdate('Y-m-d H:i:s', $reminder_start);
+        $end_datetime = gmdate('Y-m-d H:i:s', $reminder_end);
 
         $query = $wpdb->prepare(
             "SELECT * FROM {$this->table_name}
-             WHERE CONCAT(booking_date, ' ', booking_time) BETWEEN %s AND %s
+             WHERE CONCAT(booking_date, ' ', booking_time) >= %s
+             AND CONCAT(booking_date, ' ', booking_time) < %s
              AND status IN ('pending', 'confirmed')
              AND (reminder_sent_24h = 0 OR reminder_sent_24h IS NULL)
              ORDER BY booking_date ASC, booking_time ASC",
-            $reminder_start,
-            $reminder_end
+            $start_datetime,
+            $end_datetime
         );
 
-        return $wpdb->get_results($query);
+        $results = $wpdb->get_results($query);
+        return $results ?: [];
     }
 
     /**

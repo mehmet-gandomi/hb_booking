@@ -259,7 +259,7 @@ class BookingForm
     private function getTimeSlotOptions(): string
     {
         $start_hour = apply_filters('hb_booking_start_hour', 9);
-        $end_hour = apply_filters('hb_booking_end_hour', 17);
+        $end_hour = apply_filters('hb_booking_end_hour', 22);
         $interval = apply_filters('hb_booking_interval', 30); // minutes
 
         $options = '';
